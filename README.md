@@ -1,14 +1,15 @@
-<<<<<<< HEAD
-# jupiter-integration-cbdefense
-A JupiterOne managed integration for https://www.carbonblack.com/products/cb-defense/
-=======
 # JupiterOne Managed Integration for Carbon Black Defense
 
 [![Build Status](https://travis-ci.org/JupiterOne/jupiter-integration-cbdefense.svg?branch=master)](https://travis-ci.org/JupterOne/jupiter-integration-cbdefense)
 
 This JupiterOne integration connects to a Carbon Black (Cb) Defense account
-using a provided API Auth token and ingests the Cb Defense agents and their
+using a provided API Auth token and ingests the Cb Defense sensors and their
 configurations.
+
+The current version of the Cb Defense integration pulls in device sensors. The
+result graph and entity data looks like this locally:
+
+![](./docs/images/cbdefense-sensors-graphexp.png)
 
 ## Development Environment
 
@@ -69,4 +70,3 @@ integration NPM package. The package will be published by the JupiterOne team.
 ```shell
 yarn build:publish
 ```
->>>>>>> inital version
