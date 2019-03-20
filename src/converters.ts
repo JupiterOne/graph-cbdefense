@@ -12,6 +12,7 @@ import {
   SENSOR_ENTITY_CLASS,
   SENSOR_ENTITY_TYPE,
 } from "./types";
+import { normalizeHostname } from "./util/normalizeHostname";
 
 export function createAccountEntity(
   data: CbDefenseAccount,
@@ -35,7 +36,7 @@ export function createSensorEntities(
     _key: `cbdefense-sensor-${d.deviceId}`,
     _type: SENSOR_ENTITY_TYPE,
     displayName: d.name,
-    hostname: d.name.toLowerCase(),
+    hostname: normalizeHostname(d.name),
     active: d.sensorStates !== null && d.sensorStates.indexOf("ACTIVE") >= 0,
     ...d,
   }));
