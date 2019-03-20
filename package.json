@@ -1,9 +1,9 @@
 {
-  "name": "@jupiterone/managed-integration-example",
+  "name": "@jupiterone/managed-integration-cbdefense",
   "version": "0.1.0",
-  "description": "An example JupiterOne managed integration.",
+  "description": "JupiterOne managed integration for Carbon Black Defense.",
   "main": "index.js",
-  "repository": "https://github.com/jupiterone-io/managed-integration-example",
+  "repository": "https://github.com/jupiterone/jupiter-integration-cbdefense",
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "start": "ts-node --require dotenv/config tools/execute.ts | bunyan",
@@ -25,7 +25,7 @@
     "axios": "^0.18.0"
   },
   "peerDependencies": {
-    "@jupiterone/jupiter-managed-integration-sdk": "^19.2.0"
+    "@jupiterone/jupiter-managed-integration-sdk": "^20.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.3",
@@ -34,7 +34,7 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.3.4",
     "@babel/preset-env": "^7.3.1",
     "@babel/preset-typescript": "^7.1.0",
-    "@jupiterone/jupiter-managed-integration-sdk": "^19.2.0",
+    "@jupiterone/jupiter-managed-integration-sdk": "^20.0.0",
     "@types/bunyan": "^1.8.5",
     "@types/fs-extra": "^5.0.5",
     "@types/jest": "^24.0.0",

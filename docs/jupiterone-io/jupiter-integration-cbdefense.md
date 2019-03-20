@@ -41,6 +41,6 @@ The following entity resources are ingested when the integration runs:
 
 The following relationships are created/mapped:
 
-| Relationships                                 |
-| --------------------------------------------- |
-| `cbdefense_account` **HAS**`cbdefense_sensor` |
+| Relationships                                  |
+| ---------------------------------------------- |
+| `cbdefense_account` **HAS** `cbdefense_sensor` |

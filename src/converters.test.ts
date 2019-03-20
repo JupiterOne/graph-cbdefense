@@ -144,6 +144,7 @@ test("createSensorEntities", () => {
       _type: SENSOR_ENTITY_TYPE,
       displayName: sensor.name as string,
       hostname: sensor.name ? sensor.name.toLowerCase() : undefined,
+      active: true,
       ...sensor,
     },
   ]);

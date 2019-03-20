@@ -1,6 +1,9 @@
 import * as axios from "axios";
 
-import { IntegrationLogger } from "@jupiterone/jupiter-managed-integration-sdk";
+import {
+  IntegrationInstanceAuthenticationError,
+  IntegrationLogger,
+} from "@jupiterone/jupiter-managed-integration-sdk";
 
 import { CbDefenseIntegrationConfig } from "./types";
 import * as axiosUtil from "./util/axios-util";
@@ -124,30 +127,40 @@ export default class CbDefenseClient {
   }
 
   public async getAccountDetails(): Promise<CbDefenseAccount> {
-    this.logger.info("Fetching a single Cb Defense device sensor agent...");
-    const devices = await this.collectOnePage<CbDefenseSensor>(
-      "device",
-      "start=1&rows=1",
-    );
-    this.logger.info({}, "Fetched one device sensor agent");
-
-    if (devices && devices.length === 1) {
-      return {
-        site: this.site,
-        organizationName: devices[0].organizationName as string,
-        organizationId: devices[0].organizationId,
-      };
-    } else {
-      throw new Error(
-        "Unable to retrieve Cb Defense account details from device sensor",
+    this.logger.trace("Fetching a single Cb Defense device sensor agent...");
+    try {
+      const devices = await this.collectOnePage<CbDefenseSensor>(
+        "device",
+        "start=1&rows=1",
       );
+      this.logger.trace({}, "Fetched one device sensor agent");
+
+      if (devices && devices.length === 1) {
+        return {
+          site: this.site,
+          organizationName: devices[0].organizationName as string,
+          organizationId: devices[0].organizationId,
+        };
+      } else {
+        throw new Error(
+          "Unable to retrieve Cb Defense account details from device sensor",
+        );
+      }
+    } catch (err) {
+      if (err.status === 401) {
+        throw new IntegrationInstanceAuthenticationError(err);
+      } else {
+        throw new Error(
+          "Unable to retrieve Cb Defense account details from device sensor",
+        );
+      }
     }
   }
 
   public async getSensorAgents(): Promise<CbDefenseSensor[]> {
-    this.logger.info("Fetching Cb Defense device sensor agents...");
+    this.logger.trace("Fetching Cb Defense device sensor agents...");
     const result = await this.collectAllPages<CbDefenseSensor>("device");
-    this.logger.info({}, "Fetched device sensor agents");
+    this.logger.trace({}, "Fetched device sensor agents");
     return result;
   }
 

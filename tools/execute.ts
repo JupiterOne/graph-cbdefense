@@ -20,7 +20,7 @@ async function run(): Promise<void> {
     // providerPrivateKey: process.env.PROVIDER_LOCAL_EXECUTION_PRIVATE_KEY
   };
 
-  logger.info(
+  logger.trace(
     await executeSingleHandlerLocal(
       integrationConfig,
       logger,
