@@ -143,7 +143,7 @@ test("createSensorEntities", () => {
       _key: `cbdefense-sensor-${sensor.deviceId}`,
       _type: SENSOR_ENTITY_TYPE,
       displayName: sensor.name as string,
-      hostname: sensor.name ? sensor.name.toLowerCase() : undefined,
+      hostname: "davids-macbook-pro",
       active: true,
       ...sensor,
     },
