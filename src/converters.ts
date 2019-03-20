@@ -14,6 +14,7 @@ import {
   CbDefenseSensorEntity,
   DEVICE_ENTITY_CLASS,
   DEVICE_ENTITY_TYPE,
+  SENSOR_DEVICE_RELATIONSHIP_TYPE,
   SENSOR_ENTITY_CLASS,
   SENSOR_ENTITY_TYPE,
 } from "./types";
@@ -74,10 +75,10 @@ export function createAccountRelationship(
   };
 }
 
-export function mapAgentToDeviceRelationship(
+export function mapSensorToDeviceRelationship(
   agent: CbDefenseSensorEntity,
 ): AgentDeviceRelationship {
-  const hostname = normalizeHostname(agent.name);
+  const hostname = agent.hostname;
 
   // define target device properties via relationship mapping
   const mapping: RelationshipMapping = {
@@ -95,7 +96,7 @@ export function mapAgentToDeviceRelationship(
 
   return {
     _key: `${agent._key}|protects|device-${hostname}`,
-    _type: `${SENSOR_ENTITY_TYPE}_protects_device`,
+    _type: SENSOR_DEVICE_RELATIONSHIP_TYPE,
     _class: "PROTECTS",
     _fromEntityKey: agent._key,
     _toEntityKey: "",

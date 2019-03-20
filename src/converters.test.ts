@@ -101,7 +101,7 @@ const sensor: CbDefenseSensor = {
   policyName: "Standard_Mac_Workstation",
 };
 
-const sensors: CbDefenseSensor[] = [sensor];
+export const sensors: CbDefenseSensor[] = [sensor];
 
 test("createAccountRelationships", () => {
   const accountEntity = createAccountEntity(account);

@@ -22,6 +22,8 @@ export const ACCOUNT_SENSOR_RELATIONSHIP_TYPE =
 
 export const DEVICE_ENTITY_TYPE = "user_endpoint";
 export const DEVICE_ENTITY_CLASS = ["Device", "Host"];
+export const SENSOR_DEVICE_RELATIONSHIP_TYPE =
+  SENSOR_ENTITY_TYPE + "_protects_device";
 
 export interface CbDefenseIntegrationConfig {
   site: string;
