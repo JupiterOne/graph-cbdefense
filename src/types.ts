@@ -3,8 +3,11 @@ import {
   GraphClient,
   IntegrationExecutionContext,
   IntegrationInvocationEvent,
+  MappedRelationship,
   PersisterClient,
+  RelationshipFromIntegration,
 } from "@jupiterone/jupiter-managed-integration-sdk";
+
 import CbDefenseClient, { CbDefenseSensor } from "./CbDefenseClient";
 
 export const PROVIDER_NAME = "cbdefense";
@@ -16,6 +19,9 @@ export const SENSOR_ENTITY_TYPE = PROVIDER_NAME + "_sensor";
 export const SENSOR_ENTITY_CLASS = "HostAgent";
 export const ACCOUNT_SENSOR_RELATIONSHIP_TYPE =
   PROVIDER_NAME + "_account_has_sensor";
+
+export const DEVICE_ENTITY_TYPE = "user_endpoint";
+export const DEVICE_ENTITY_CLASS = ["Device", "Host"];
 
 export interface CbDefenseIntegrationConfig {
   site: string;
@@ -42,3 +48,7 @@ export interface CbDefenseSensorEntity
   hostname: string | undefined;
   active: boolean;
 }
+
+export interface AgentDeviceRelationship
+  extends RelationshipFromIntegration,
+    MappedRelationship {}
