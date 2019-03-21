@@ -9,6 +9,7 @@ import {
   createAccountEntity,
   createAccountRelationships,
   createSensorEntities,
+  mapSensorToDeviceRelationship,
 } from "./converters";
 import initializeContext from "./initializeContext";
 import {
@@ -16,6 +17,7 @@ import {
   ACCOUNT_SENSOR_RELATIONSHIP_TYPE,
   CbDefenseAccountEntity,
   CbDefenseSensorEntity,
+  SENSOR_DEVICE_RELATIONSHIP_TYPE,
   SENSOR_ENTITY_TYPE,
 } from "./types";
 
@@ -28,12 +30,14 @@ export default async function executionHandler(
     oldAccountEntities,
     oldSensorEntities,
     oldAccountSensorRelationships,
+    oldMappedDeviceRelationships,
     newAccountEntities,
     newSensorEntities,
   ] = await Promise.all([
     graph.findEntitiesByType<CbDefenseAccountEntity>(ACCOUNT_ENTITY_TYPE),
     graph.findEntitiesByType<CbDefenseSensorEntity>(SENSOR_ENTITY_TYPE),
     graph.findRelationshipsByType(ACCOUNT_SENSOR_RELATIONSHIP_TYPE),
+    graph.findRelationshipsByType(SENSOR_DEVICE_RELATIONSHIP_TYPE),
     fetchAccountEntitiesFromProvider(provider),
     fetchSensorEntitiesFromProvider(provider),
   ]);
@@ -45,6 +49,11 @@ export default async function executionHandler(
     ACCOUNT_SENSOR_RELATIONSHIP_TYPE,
   );
 
+  const newMappedDeviceRelationships = [];
+  for (const e of newSensorEntities) {
+    newMappedDeviceRelationships.push(mapSensorToDeviceRelationship(e));
+  }
+
   return {
     operations: await persister.publishPersisterOperations([
       [
@@ -55,6 +64,10 @@ export default async function executionHandler(
         ...persister.processRelationships(
           oldAccountSensorRelationships,
           newAccountSensorRelationships,
+        ),
+        ...persister.processRelationships(
+          oldMappedDeviceRelationships,
+          newMappedDeviceRelationships,
         ),
       ],
     ]),

@@ -3,6 +3,7 @@ import {
   IntegrationInvocationEvent,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 
+import { sensors } from "./converters.test";
 import executionHandler from "./executionHandler";
 import initializeContext from "./initializeContext";
 import {
@@ -26,7 +27,7 @@ test("executionHandler", async () => {
     },
     provider: {
       getAccountDetails: jest.fn().mockResolvedValue({}),
-      getSensorAgents: jest.fn().mockResolvedValue([]),
+      getSensorAgents: jest.fn().mockResolvedValue(sensors),
     },
   };
 
@@ -54,7 +55,7 @@ test("executionHandler", async () => {
 
   expect(executionContext.persister.processEntities).toHaveBeenCalledTimes(2);
   expect(executionContext.persister.processRelationships).toHaveBeenCalledTimes(
-    1,
+    2,
   );
   expect(
     executionContext.persister.publishPersisterOperations,
