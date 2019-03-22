@@ -17,7 +17,9 @@ jest.mock("./initializeContext");
 test("executionHandler", async () => {
   const executionContext: any = {
     graph: {
+      findAllEntitiesByType: jest.fn().mockResolvedValue([]),
       findEntitiesByType: jest.fn().mockResolvedValue([]),
+      findAllRelationshipsByType: jest.fn().mockResolvedValue([]),
       findRelationshipsByType: jest.fn().mockResolvedValue([]),
     },
     persister: {
@@ -40,7 +42,7 @@ test("executionHandler", async () => {
 
   expect(initializeContext).toHaveBeenCalledWith(invocationContext);
 
-  expect(executionContext.graph.findEntitiesByType).toHaveBeenCalledWith(
+  expect(executionContext.graph.findAllEntitiesByType).toHaveBeenCalledWith(
     ACCOUNT_ENTITY_TYPE,
   );
   expect(executionContext.graph.findEntitiesByType).toHaveBeenCalledWith(
