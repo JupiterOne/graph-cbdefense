@@ -12,13 +12,13 @@ import {
   SENSOR_ENTITY_TYPE,
 } from "./types";
 
-const account: CbDefenseAccount = {
+export const account: CbDefenseAccount = {
   organizationId: 1758,
   organizationName: "lifeomic.com",
   site: "prod05",
 };
 
-const sensor: CbDefenseSensor = {
+export const sensor: CbDefenseSensor = {
   adGroupId: 0,
   policyOverride: false,
   currentSensorPolicyName: null,
@@ -127,11 +127,12 @@ test("createAccountRelationships", () => {
 test("createAccount", () => {
   expect(createAccountEntity(account)).toEqual({
     _class: ACCOUNT_ENTITY_CLASS,
-    _key: `cbdefense-account-${account.organizationId}`,
+    _key: `carbonblack-account-${account.organizationId}`,
     _type: ACCOUNT_ENTITY_TYPE,
     accountId: account.organizationId,
     displayName: account.organizationName,
     name: account.organizationName,
+    organization: "lifeomic",
     webLink: `https://defense-${account.site}.conferdeploy.net`,
   });
 });

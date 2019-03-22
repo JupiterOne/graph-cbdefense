@@ -10,15 +10,15 @@ import {
 
 import CbDefenseClient, { CbDefenseSensor } from "./CbDefenseClient";
 
-export const PROVIDER_NAME = "cbdefense";
+export const PROVIDER_NAME = "carbonblack_psc";
 
 export const ACCOUNT_ENTITY_TYPE = PROVIDER_NAME + "_account";
 export const ACCOUNT_ENTITY_CLASS = "Account";
 
-export const SENSOR_ENTITY_TYPE = PROVIDER_NAME + "_sensor";
+export const SENSOR_ENTITY_TYPE = "cbdefense_sensor";
 export const SENSOR_ENTITY_CLASS = "HostAgent";
 export const ACCOUNT_SENSOR_RELATIONSHIP_TYPE =
-  PROVIDER_NAME + "_account_has_sensor";
+  ACCOUNT_ENTITY_TYPE + "_has_sensor";
 
 export const DEVICE_ENTITY_TYPE = "user_endpoint";
 export const DEVICE_ENTITY_CLASS = ["Device", "Host"];
@@ -41,6 +41,7 @@ export interface CbDefenseExecutionContext
 export interface CbDefenseAccountEntity extends EntityFromIntegration {
   accountId: number;
   name: string;
+  organization: string;
 }
 
 export interface CbDefenseSensorEntity
