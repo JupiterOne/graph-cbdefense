@@ -45,6 +45,7 @@ export function createSensorEntities(
     displayName: d.name,
     hostname: normalizeHostname(d.name),
     active: d.sensorStates !== null && d.sensorStates.indexOf("ACTIVE") >= 0,
+    function: ["anti-malware", "activity-monitor"],
     ...d,
   }));
 }
