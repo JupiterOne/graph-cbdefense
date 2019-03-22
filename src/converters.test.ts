@@ -146,6 +146,7 @@ test("createSensorEntities", () => {
       displayName: sensor.name as string,
       hostname: "davids-macbook-pro",
       active: true,
+      function: ["anti-malware", "activity-monitor"],
       ...sensor,
     },
   ]);

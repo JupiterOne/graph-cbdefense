@@ -50,6 +50,7 @@ export interface CbDefenseSensorEntity
   displayName: string;
   hostname: string | undefined;
   active: boolean;
+  function: string[];
 }
 
 export interface AgentDeviceRelationship
