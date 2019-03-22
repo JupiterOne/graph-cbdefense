@@ -34,7 +34,7 @@ export default async function executionHandler(
     newAccountEntities,
     newSensorEntities,
   ] = await Promise.all([
-    graph.findEntitiesByType<CbDefenseAccountEntity>(ACCOUNT_ENTITY_TYPE),
+    graph.findAllEntitiesByType<CbDefenseAccountEntity>(ACCOUNT_ENTITY_TYPE),
     graph.findEntitiesByType<CbDefenseSensorEntity>(SENSOR_ENTITY_TYPE),
     graph.findRelationshipsByType(ACCOUNT_SENSOR_RELATIONSHIP_TYPE),
     graph.findRelationshipsByType(SENSOR_DEVICE_RELATIONSHIP_TYPE),
