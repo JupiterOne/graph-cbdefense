@@ -25,11 +25,12 @@ export function createAccountEntity(
 ): CbDefenseAccountEntity {
   return {
     _class: ACCOUNT_ENTITY_CLASS,
-    _key: `cbdefense-account-${data.organizationId}`,
+    _key: `carbonblack-account-${data.organizationId}`,
     _type: ACCOUNT_ENTITY_TYPE,
     accountId: data.organizationId,
     displayName: data.organizationName,
     name: data.organizationName,
+    organization: data.organizationName.replace(/\.[a-z]{2,3}$/, ""),
     webLink: `https://defense-${data.site}.conferdeploy.net`,
   };
 }

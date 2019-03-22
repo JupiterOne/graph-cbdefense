@@ -3,7 +3,7 @@ import {
   IntegrationInvocationEvent,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 
-import { sensors } from "./converters.test";
+import { account, sensors } from "./converters.test";
 import executionHandler from "./executionHandler";
 import initializeContext from "./initializeContext";
 import {
@@ -26,7 +26,7 @@ test("executionHandler", async () => {
       publishPersisterOperations: jest.fn().mockResolvedValue({}),
     },
     provider: {
-      getAccountDetails: jest.fn().mockResolvedValue({}),
+      getAccountDetails: jest.fn().mockResolvedValue(account),
       getSensorAgents: jest.fn().mockResolvedValue(sensors),
     },
   };
