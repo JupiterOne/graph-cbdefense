@@ -367,6 +367,12 @@ test("createPolicyEntities", () => {
       _class: POLICY_ENTITY_CLASS,
       _key: "cb-sensor-policy-12345",
       _type: POLICY_ENTITY_TYPE,
+      _rawData: [
+        {
+          name: "default",
+          rawData: policy,
+        },
+      ],
       displayName: "default",
       name: "default",
       description: null,

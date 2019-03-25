@@ -77,6 +77,12 @@ export function createPolicyEntities(
     _class: POLICY_ENTITY_CLASS,
     _key: getPolicyKey(d.id),
     _type: POLICY_ENTITY_TYPE,
+    _rawData: [
+      {
+        name: "default",
+        rawData: d,
+      },
+    ],
     displayName: d.name,
     name: d.name,
     description: d.description,
