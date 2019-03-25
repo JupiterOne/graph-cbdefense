@@ -5,18 +5,29 @@ import {
   RelationshipMapping,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 
-import { CbDefenseAccount, CbDefenseSensor } from "./CbDefenseClient";
+import {
+  CbDefenseAccount,
+  CbDefensePolicy,
+  CbDefenseSensor,
+} from "./CbDefenseClient";
 import {
   ACCOUNT_ENTITY_CLASS,
   ACCOUNT_ENTITY_TYPE,
   AgentDeviceRelationship,
   CbDefenseAccountEntity,
+  CbDefensePolicyEntity,
   CbDefenseSensorEntity,
+  CbDefenseServiceEntity,
   DEVICE_ENTITY_CLASS,
   DEVICE_ENTITY_TYPE,
+  POLICY_ENTITY_CLASS,
+  POLICY_ENTITY_TYPE,
   SENSOR_DEVICE_RELATIONSHIP_TYPE,
   SENSOR_ENTITY_CLASS,
   SENSOR_ENTITY_TYPE,
+  SENSOR_POLICY_RELATIONSHIP_TYPE,
+  SERVICE_ENTITY_CLASS,
+  SERVICE_ENTITY_TYPE,
 } from "./types";
 import { normalizeHostname } from "./util/normalizeHostname";
 
@@ -35,6 +46,15 @@ export function createAccountEntity(
   };
 }
 
+export function createServiceEntity(accountId: number): CbDefenseServiceEntity {
+  return {
+    _class: SERVICE_ENTITY_CLASS,
+    _key: `${SERVICE_ENTITY_TYPE}-${accountId}`,
+    _type: SERVICE_ENTITY_TYPE,
+    displayName: "CB Endpoint Protection Service",
+  };
+}
+
 export function createSensorEntities(
   data: CbDefenseSensor[],
 ): CbDefenseSensorEntity[] {
@@ -50,6 +70,30 @@ export function createSensorEntities(
   }));
 }
 
+export function createPolicyEntities(
+  data: CbDefensePolicy[],
+): CbDefensePolicyEntity[] {
+  return data.map(d => ({
+    _class: POLICY_ENTITY_CLASS,
+    _key: getPolicyKey(d.id),
+    _type: POLICY_ENTITY_TYPE,
+    _rawData: [
+      {
+        name: "default",
+        rawData: d,
+      },
+    ],
+    displayName: d.name,
+    name: d.name,
+    description: d.description,
+    id: d.id,
+    version: d.version,
+    priorityLevel: d.priorityLevel,
+    systemPolicy: d.systemPolicy,
+    latestRevision: d.latestRevision,
+  }));
+}
+
 export function createAccountRelationships(
   account: CbDefenseAccountEntity,
   entities: EntityFromIntegration[],
@@ -59,7 +103,6 @@ export function createAccountRelationships(
   for (const entity of entities) {
     relationships.push(createAccountRelationship(account, entity, type));
   }
-
   return relationships;
 }
 
@@ -75,6 +118,42 @@ export function createAccountRelationship(
     _toEntityKey: entity._key,
     _type: type,
   };
+}
+
+export function createServicePolicyRelationships(
+  service: CbDefenseServiceEntity,
+  policies: CbDefensePolicyEntity[],
+) {
+  const relationships = [];
+  for (const p of policies) {
+    relationships.push({
+      _class: "ENFORCES",
+      _fromEntityKey: p._key,
+      _key: `${p._key}_enforces_${service._key}`,
+      _toEntityKey: service._key,
+      _type: SENSOR_POLICY_RELATIONSHIP_TYPE,
+    });
+  }
+  return relationships;
+}
+
+export function createSensorPolicyRelationships(
+  sensors: CbDefenseSensorEntity[],
+) {
+  const relationships = [];
+  for (const s of sensors) {
+    if (!!s.policyId) {
+      const policyKey = getPolicyKey(s.policyId);
+      relationships.push({
+        _class: "ASSIGNED",
+        _fromEntityKey: s._key,
+        _key: `${s._key}_assigned_${policyKey}`,
+        _toEntityKey: policyKey,
+        _type: SENSOR_POLICY_RELATIONSHIP_TYPE,
+      });
+    }
+  }
+  return relationships;
 }
 
 export function mapSensorToDeviceRelationship(
@@ -104,4 +183,8 @@ export function mapSensorToDeviceRelationship(
     _toEntityKey: "",
     _mapping: mapping,
   };
+}
+
+function getPolicyKey(policyId: number) {
+  return `cb-sensor-policy-${policyId}`;
 }

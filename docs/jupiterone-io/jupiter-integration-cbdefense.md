@@ -1,4 +1,4 @@
-# Carbon Black Defense
+# Carbon Black PSC
 
 ## Overview
 
@@ -35,12 +35,17 @@ The following entity resources are ingested when the integration runs:
 | Example Entity Resource | \_type : \_class of the Entity        |
 | ----------------------- | ------------------------------------- |
 | Account                 | `carbonblack_psc_account` : `Account` |
+| Service                 | `cb_endpoint_protection` : `Service`  |
 | Device Sensor Agent     | `cbdefense_sensor` : `HostAgent`      |
+| Sensor Policy           | `cb_sensor_policy` : `ControlPolicy`  |
 
 ## Relationships
 
 The following relationships are created/mapped:
 
-| Relationships                                        |
-| ---------------------------------------------------- |
-| `carbonblack_psc_account` **HAS** `cbdefense_sensor` |
+| Relationships                                              |
+| ---------------------------------------------------------- |
+| `carbonblack_psc_account` **HAS** `cbdefense_sensor`       |
+| `carbonblack_psc_account` **HAS** `cb_endpoint_protection` |
+| `cb_sensor_policy` **ENFORCES** `cb_endpoint_protection`   |
+| `cbdefense_sensor` **ASSIGNED** `cb_sensor_policy`         |
