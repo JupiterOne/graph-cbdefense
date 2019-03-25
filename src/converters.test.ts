@@ -1,15 +1,28 @@
-import { CbDefenseAccount, CbDefenseSensor } from "./CbDefenseClient";
+import {
+  CbDefenseAccount,
+  CbDefensePolicy,
+  CbDefenseSensor,
+} from "./CbDefenseClient";
 import {
   createAccountEntity,
   createAccountRelationships,
+  createPolicyEntities,
   createSensorEntities,
+  createSensorPolicyRelationships,
+  createServiceEntity,
+  createServicePolicyRelationships,
 } from "./converters";
 import {
   ACCOUNT_ENTITY_CLASS,
   ACCOUNT_ENTITY_TYPE,
   ACCOUNT_SENSOR_RELATIONSHIP_TYPE,
+  POLICY_ENTITY_CLASS,
+  POLICY_ENTITY_TYPE,
   SENSOR_ENTITY_CLASS,
   SENSOR_ENTITY_TYPE,
+  SENSOR_POLICY_RELATIONSHIP_TYPE,
+  SERVICE_ENTITY_CLASS,
+  SERVICE_ENTITY_TYPE,
 } from "./types";
 
 export const account: CbDefenseAccount = {
@@ -27,10 +40,10 @@ export const sensor: CbDefenseSensor = {
   lastDevicePolicyChangedTime: null,
   lastPolicyUpdatedTime: null,
   loginUserName: null,
-  activationCode: "8F9GZP",
+  activationCode: "8F9XYZ",
   firstName: "David",
-  lastName: "Fifer",
-  email: "david.fifer@lifeomic.com",
+  lastName: "Smith",
+  email: "david.smith@lifeomic.com",
   middleName: null,
   deviceId: 3759918,
   deviceType: "MAC",
@@ -97,11 +110,198 @@ export const sensor: CbDefenseSensor = {
   uninstalledTime: null,
   name: "Davids-MacBook-Pro.local",
   status: "REGISTERED",
-  policyId: 12353,
-  policyName: "Standard_Mac_Workstation",
+  policyId: 12345,
+  policyName: "default",
 };
 
 export const sensors: CbDefenseSensor[] = [sensor];
+
+export const policy: CbDefensePolicy = {
+  priorityLevel: "MEDIUM",
+  systemPolicy: true,
+  latestRevision: 1505412168158,
+  id: 12345,
+  version: 2,
+  policy: {
+    avSettings: {
+      features: [
+        {
+          nabled: true,
+          name: "SIGNATURE_UPDATE",
+        },
+        {
+          enabled: true,
+          name: "ONACCESS_SCAN",
+        },
+        {
+          enabled: false,
+          name: "ONDEMAND_SCAN",
+        },
+      ],
+      updateServers: {
+        servers: [
+          {
+            flags: 0,
+            regId: null,
+            server: ["http://updates.cdc.carbonblack.io/update"],
+          },
+        ],
+        serversForOffSiteDevices: ["http://updates.cdc.carbonblack.io/update"],
+      },
+      apc: {
+        maxFileSize: 4,
+        maxExeDelay: 45,
+        riskLevel: 4,
+        enabled: false,
+      },
+      onAccessScan: {
+        profile: "NORMAL",
+      },
+      onDemandScan: {
+        profile: "NORMAL",
+        scanCdDvd: "AUTOSCAN",
+        scanUsb: "AUTOSCAN",
+        schedule: {
+          days: null,
+          rangeHours: 8,
+          startHour: 20,
+          recoveryScanIfMissed: true,
+        },
+      },
+      signatureUpdate: {
+        schedule: {
+          initialRandomDelayHours: 4,
+          intervalHours: 4,
+          fullIntervalHours: 0,
+        },
+      },
+    },
+    sensorSettings: [
+      {
+        name: "ALLOW_UNINSTALL",
+        value: "true",
+      },
+      {
+        name: "ALLOW_UPLOADS",
+        value: "true",
+      },
+      {
+        name: "SHOW_UI",
+        value: "true",
+      },
+      {
+        name: "ENABLE_THREAT_SHARING",
+        value: "true",
+      },
+      {
+        name: "QUARANTINE_DEVICE",
+        value: "false",
+      },
+      {
+        name: "LOGGING_LEVEL",
+        value: "false",
+      },
+      {
+        name: "QUARANTINE_DEVICE_MESSAGE",
+        value:
+          "Your device has been quarantined. Please contact your administrator.",
+      },
+      {
+        name: "SET_SENSOR_MODE",
+        value: "0",
+      },
+      {
+        name: "SENSOR_RESET",
+        value: "0",
+      },
+      {
+        name: "BACKGROUND_SCAN",
+        value: "true",
+      },
+      {
+        name: "POLICY_ACTION_OVERRIDE",
+        value: "true",
+      },
+      {
+        name: "HELP_MESSAGE",
+        value: "",
+      },
+      {
+        name: "PRESERVE_SYSTEM_MEMORY_SCAN",
+        value: "false",
+      },
+      {
+        name: "HASH_MD5",
+        value: "false",
+      },
+      {
+        name: "SCAN_LARGE_FILE_READ",
+        value: "false",
+      },
+      {
+        name: "SCAN_EXECUTE_ON_NETWORK_DRIVE",
+        value: "true",
+      },
+      {
+        name: "DELAY_EXECUTE",
+        value: "true",
+      },
+      {
+        name: "SCAN_NETWORK_DRIVE",
+        value: "false",
+      },
+      {
+        name: "BYPASS_AFTER_LOGIN_MINS",
+        value: "0",
+      },
+      {
+        name: "BYPASS_AFTER_RESTART_MINS",
+        value: "0",
+      },
+      {
+        name: "SECURITY_CENTER_OPT",
+        value: "false",
+      },
+      {
+        name: "CB_LIVE_RESPONSE",
+        value: "false",
+      },
+      {
+        name: "UNINSTALL_CODE",
+        value: "false",
+      },
+    ],
+    knownBadHashAutoDeleteDelayMs: null,
+    directoryActionRules: null,
+    rules: [
+      {
+        application: {
+          value: "KNOWN_MALWARE",
+          type: "REPUTATION",
+        },
+        id: 1,
+        required: false,
+        operation: "RUN",
+        action: "DENY",
+      },
+      {
+        application: {
+          value: "COMPANY_BLACK_LIST",
+          type: "REPUTATION",
+        },
+        id: 2,
+        required: false,
+        operation: "RUN",
+        action: "DENY",
+      },
+    ],
+    id: -1,
+  },
+  name: "default",
+  description: null,
+};
+
+export const policies: CbDefensePolicy[] = [policy];
 
 test("createAccountRelationships", () => {
   const accountEntity = createAccountEntity(account);
@@ -137,6 +337,15 @@ test("createAccount", () => {
   });
 });
 
+test("createServiceEntity", () => {
+  expect(createServiceEntity(account.organizationId)).toEqual({
+    _class: SERVICE_ENTITY_CLASS,
+    _key: `${SERVICE_ENTITY_TYPE}-1758`,
+    _type: SERVICE_ENTITY_TYPE,
+    displayName: "CB Endpoint Protection Service",
+  });
+});
+
 test("createSensorEntities", () => {
   expect(createSensorEntities(sensors)).toEqual([
     {
@@ -148,6 +357,55 @@ test("createSensorEntities", () => {
       active: true,
       function: ["anti-malware", "activity-monitor"],
       ...sensor,
+    },
+  ]);
+});
+
+test("createPolicyEntities", () => {
+  expect(createPolicyEntities(policies)).toEqual([
+    {
+      _class: POLICY_ENTITY_CLASS,
+      _key: "cb-sensor-policy-12345",
+      _type: POLICY_ENTITY_TYPE,
+      displayName: "default",
+      name: "default",
+      description: null,
+      id: 12345,
+      version: 2,
+      priorityLevel: "MEDIUM",
+      systemPolicy: true,
+      latestRevision: 1505412168158,
+    },
+  ]);
+});
+
+test("createSensorPolicyRelationships", () => {
+  expect(
+    createSensorPolicyRelationships(createSensorEntities(sensors)),
+  ).toEqual([
+    {
+      _class: "ASSIGNED",
+      _fromEntityKey: "cbdefense-sensor-3759918",
+      _key: `cbdefense-sensor-3759918_assigned_cb-sensor-policy-12345`,
+      _toEntityKey: "cb-sensor-policy-12345",
+      _type: SENSOR_POLICY_RELATIONSHIP_TYPE,
+    },
+  ]);
+});
+
+test("createServicePolicyRelationships", () => {
+  expect(
+    createServicePolicyRelationships(
+      createServiceEntity(account.organizationId),
+      createPolicyEntities(policies),
+    ),
+  ).toEqual([
+    {
+      _class: "ENFORCES",
+      _fromEntityKey: "cb-sensor-policy-12345",
+      _key: `cb-sensor-policy-12345_enforces_${SERVICE_ENTITY_TYPE}-1758`,
+      _toEntityKey: `${SERVICE_ENTITY_TYPE}-1758`,
+      _type: SENSOR_POLICY_RELATIONSHIP_TYPE,
     },
   ]);
 });

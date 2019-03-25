@@ -103,6 +103,40 @@ export interface CbDefenseSensor {
   policyName: string | null;
 }
 
+export interface CbDefensePolicy extends CbDefensePolicyProperties {
+  policy: CbDefensePolicySettings;
+}
+
+export interface CbDefensePolicyProperties {
+  id: number;
+  version: number;
+  latestRevision: number;
+  priorityLevel: string;
+  systemPolicy: boolean;
+  name: string;
+  description: string | null;
+}
+
+export interface CbDefensePolicySettings {
+  id: number;
+  avSettings: any;
+  sensorSettings: any;
+  knownBadHashAutoDeleteDelayMs: any;
+  directoryActionRules: any;
+  rules: CbDefensePolicyRule[];
+}
+
+export interface CbDefensePolicyRule {
+  id: number;
+  application: {
+    type: string;
+    value: string;
+  };
+  required: boolean;
+  operation: string;
+  action: string;
+}
+
 export default class CbDefenseClient {
   private axiosInstance: axios.AxiosInstance;
   private BASE_API_URL: string;
@@ -161,6 +195,13 @@ export default class CbDefenseClient {
     this.logger.trace("Fetching Cb Defense device sensor agents...");
     const result = await this.collectAllPages<CbDefenseSensor>("device");
     this.logger.trace({}, "Fetched device sensor agents");
+    return result;
+  }
+
+  public async getPolicies(): Promise<CbDefensePolicy[]> {
+    this.logger.trace("Fetching Cb Defense policies...");
+    const result = await this.collectAllPages<CbDefensePolicy>("policy");
+    this.logger.trace({}, "Fetched policies");
     return result;
   }
 
