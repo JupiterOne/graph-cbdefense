@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/jupiter-integration-cbdefense",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "JupiterOne managed integration for Carbon Black Defense.",
   "main": "index.js",
   "repository": "https://github.com/jupiterone/jupiter-integration-cbdefense",
