@@ -1,4 +1,4 @@
-export function normalizeHostname(deviceName: string): string {
+export function normalizeHostname(deviceName: string | null): string {
   return deviceName
     ? deviceName
         .split(".")[0]

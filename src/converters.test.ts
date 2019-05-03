@@ -114,7 +114,13 @@ export const sensor: CbDefenseSensor = {
   policyName: "default",
 };
 
-export const sensors: CbDefenseSensor[] = [sensor];
+export const sensorNoName: CbDefenseSensor = {
+  ...sensor,
+  deviceId: 3759919,
+  name: null,
+};
+
+export const sensors: CbDefenseSensor[] = [sensor, sensorNoName];
 
 export const policy: CbDefensePolicy = {
   priorityLevel: "MEDIUM",
@@ -321,6 +327,13 @@ test("createAccountRelationships", () => {
       _toEntityKey: sensorEntities[0]._key,
       _type: ACCOUNT_SENSOR_RELATIONSHIP_TYPE,
     },
+    {
+      _class: "HAS",
+      _fromEntityKey: accountEntity._key,
+      _key: `${accountEntity._key}_has_${sensorEntities[1]._key}`,
+      _toEntityKey: sensorEntities[1]._key,
+      _type: ACCOUNT_SENSOR_RELATIONSHIP_TYPE,
+    },
   ]);
 });
 
@@ -358,6 +371,16 @@ test("createSensorEntities", () => {
       function: ["anti-malware", "activity-monitor"],
       ...sensor,
     },
+    {
+      _class: SENSOR_ENTITY_CLASS,
+      _key: `cbdefense-sensor-${sensorNoName.deviceId}`,
+      _type: SENSOR_ENTITY_TYPE,
+      displayName: "cbdefense-sensor",
+      hostname: "",
+      active: true,
+      function: ["anti-malware", "activity-monitor"],
+      ...sensorNoName,
+    },
   ]);
 });
 
@@ -393,6 +416,13 @@ test("createSensorPolicyRelationships", () => {
       _class: "ASSIGNED",
       _fromEntityKey: "cbdefense-sensor-3759918",
       _key: `cbdefense-sensor-3759918_assigned_cb-sensor-policy-12345`,
+      _toEntityKey: "cb-sensor-policy-12345",
+      _type: SENSOR_POLICY_RELATIONSHIP_TYPE,
+    },
+    {
+      _class: "ASSIGNED",
+      _fromEntityKey: "cbdefense-sensor-3759919",
+      _key: `cbdefense-sensor-3759919_assigned_cb-sensor-policy-12345`,
       _toEntityKey: "cb-sensor-policy-12345",
       _type: SENSOR_POLICY_RELATIONSHIP_TYPE,
     },
