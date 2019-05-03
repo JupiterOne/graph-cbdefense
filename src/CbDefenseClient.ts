@@ -97,7 +97,7 @@ export interface CbDefenseSensor {
   encodedActivationCode: number | null;
   originEventHash: number | null;
   uninstalledTime: number | null;
-  name: string;
+  name: string | null;
   status: string | null;
   policyId: number | null;
   policyName: string | null;

@@ -62,7 +62,7 @@ export function createSensorEntities(
     _class: SENSOR_ENTITY_CLASS,
     _key: `cbdefense-sensor-${d.deviceId}`,
     _type: SENSOR_ENTITY_TYPE,
-    displayName: d.name,
+    displayName: d.name || "cbdefense-sensor",
     hostname: normalizeHostname(d.name),
     active: d.sensorStates !== null && d.sensorStates.indexOf("ACTIVE") >= 0,
     function: ["anti-malware", "activity-monitor"],
