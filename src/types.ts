@@ -2,10 +2,8 @@ import {
   EntityFromIntegration,
   GraphClient,
   IntegrationExecutionContext,
-  IntegrationInvocationEvent,
-  MappedRelationship,
+  MappedRelationshipFromIntegration,
   PersisterClient,
-  RelationshipFromIntegration,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 
 import CbDefenseClient, {
@@ -46,8 +44,7 @@ export interface CbDefenseIntegrationConfig {
   apiKey: string;
 }
 
-export interface CbDefenseExecutionContext
-  extends IntegrationExecutionContext<IntegrationInvocationEvent> {
+export interface CbDefenseExecutionContext extends IntegrationExecutionContext {
   graph: GraphClient;
   persister: PersisterClient;
   provider: CbDefenseClient;
@@ -75,6 +72,4 @@ export interface CbDefensePolicyEntity
   extends EntityFromIntegration,
     CbDefensePolicyProperties {}
 
-export interface AgentDeviceRelationship
-  extends RelationshipFromIntegration,
-    MappedRelationship {}
+export type AgentDeviceRelationship = MappedRelationshipFromIntegration;

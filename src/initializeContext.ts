@@ -1,12 +1,9 @@
-import {
-  IntegrationExecutionContext,
-  IntegrationInvocationEvent,
-} from "@jupiterone/jupiter-managed-integration-sdk";
+import { IntegrationExecutionContext } from "@jupiterone/jupiter-managed-integration-sdk";
 import CbDefenseClient from "./CbDefenseClient";
 import { CbDefenseExecutionContext } from "./types";
 
 export default function initializeContext(
-  context: IntegrationExecutionContext<IntegrationInvocationEvent>,
+  context: IntegrationExecutionContext,
 ): CbDefenseExecutionContext {
   return {
     ...context,

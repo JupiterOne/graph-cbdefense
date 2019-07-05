@@ -179,8 +179,6 @@ export function mapSensorToDeviceRelationship(
     _key: `${agent._key}|protects|device-${hostname}`,
     _type: SENSOR_DEVICE_RELATIONSHIP_TYPE,
     _class: "PROTECTS",
-    _fromEntityKey: agent._key,
-    _toEntityKey: "",
     _mapping: mapping,
   };
 }
