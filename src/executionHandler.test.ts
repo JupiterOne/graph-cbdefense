@@ -1,7 +1,4 @@
-import {
-  IntegrationExecutionContext,
-  IntegrationInvocationEvent,
-} from "@jupiterone/jupiter-managed-integration-sdk";
+import { IntegrationExecutionContext } from "@jupiterone/jupiter-managed-integration-sdk";
 
 import { account, policies, sensors } from "./converters.test";
 import executionHandler from "./executionHandler";
@@ -36,9 +33,7 @@ test("executionHandler", async () => {
 
   (initializeContext as jest.Mock).mockReturnValue(executionContext);
 
-  const invocationContext = {} as IntegrationExecutionContext<
-    IntegrationInvocationEvent
-  >;
+  const invocationContext = {} as IntegrationExecutionContext;
   await executionHandler(invocationContext);
 
   expect(initializeContext).toHaveBeenCalledWith(invocationContext);
