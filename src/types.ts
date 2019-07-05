@@ -34,7 +34,7 @@ export const ACCOUNT_SERVICE_RELATIONSHIP_TYPE =
   ACCOUNT_ENTITY_TYPE + "_has_endpoint_protection_service";
 
 export const POLICY_ENTITY_TYPE = "cb_sensor_policy";
-export const POLICY_ENTITY_CLASS = "ControlPolicy";
+export const POLICY_ENTITY_CLASS = ["ControlPolicy", "Ruleset"];
 export const SERVICE_POLICY_RELATIONSHIP_TYPE =
   POLICY_ENTITY_TYPE + "_enforces_endpoint_protection_service";
 export const SENSOR_POLICY_RELATIONSHIP_TYPE =
