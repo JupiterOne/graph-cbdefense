@@ -1,8 +1,9 @@
 import {
+  IntegrationInstanceAuthenticationError,
   IntegrationInstanceConfigError,
   IntegrationValidationContext,
 } from "@jupiterone/jupiter-managed-integration-sdk";
-
+import CbDefenseClient from "./CbDefenseClient";
 import { CbDefenseIntegrationConfig } from "./types";
 
 /**
@@ -23,32 +24,31 @@ import { CbDefenseIntegrationConfig } from "./types";
 export default async function invocationValidator(
   context: IntegrationValidationContext,
 ) {
-  const { accountId, config } = context.instance;
+  const { config } = context.instance;
   const instanceConfig = config as CbDefenseIntegrationConfig;
 
   if (!instanceConfig) {
-    throw new IntegrationInstanceConfigError(
-      `Carbon Black Defense configuration not found (accountId=${accountId})`,
-    );
+    throw new IntegrationInstanceConfigError("Configuration missing");
   }
 
   const { site, connectorId, apiKey } = instanceConfig;
 
-  if (!site) {
+  if (!(site && connectorId && apiKey)) {
     throw new IntegrationInstanceConfigError(
-      `No deployment site provided (accountId=${accountId})`,
+      "Configuration requires site, connectorId, and apiKey",
     );
   }
 
-  if (!connectorId) {
+  if (site.match("conferdeploy")) {
     throw new IntegrationInstanceConfigError(
-      `Missing Connector ID in configuration (accountId=${accountId})`,
+      "Site is invalid, should be for example `prod05` in `https://defense-prod05.conferdeploy.net/`",
     );
   }
 
-  if (!apiKey) {
-    throw new IntegrationInstanceConfigError(
-      `Missing API key in configuration (accountId=${accountId})`,
-    );
+  const client = new CbDefenseClient(instanceConfig, context.logger);
+  try {
+    await client.getAccountDetails();
+  } catch (err) {
+    throw new IntegrationInstanceAuthenticationError(err);
   }
 }
