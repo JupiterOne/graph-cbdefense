@@ -1,10 +1,9 @@
-import * as axios from "axios";
-
 import {
+  IntegrationError,
   IntegrationInstanceAuthenticationError,
   IntegrationLogger,
 } from "@jupiterone/jupiter-managed-integration-sdk";
-
+import * as axios from "axios";
 import { CbDefenseIntegrationConfig } from "./types";
 import * as axiosUtil from "./util/axios-util";
 
@@ -169,24 +168,25 @@ export default class CbDefenseClient {
       );
       this.logger.trace({}, "Fetched one device sensor agent");
 
-      if (devices && devices.length === 1) {
+      if (devices && devices.length > 0) {
         return {
           site: this.site,
           organizationName: devices[0].organizationName as string,
           organizationId: devices[0].organizationId,
         };
       } else {
-        throw new Error(
-          "Unable to retrieve Cb Defense account details from device sensor",
+        throw new IntegrationError(
+          "Unable to retrieve Cb Defense account details, no device sensor found",
         );
       }
     } catch (err) {
       if (err.status === 401) {
         throw new IntegrationInstanceAuthenticationError(err);
       } else {
-        throw new Error(
-          "Unable to retrieve Cb Defense account details from device sensor",
-        );
+        throw new IntegrationError({
+          cause: err,
+          message: "Unable to retrieve Cb Defense account details",
+        });
       }
     }
   }
