@@ -1,5 +1,5 @@
 {
-  "name": "@jupiterone/jupiter-integration-cbdefense",
+  "name": "@jupiterone/graph-cbdefense",
   "version": "0.5.4",
   "description": "JupiterOne managed integration for Carbon Black Defense.",
   "main": "dist/index.js",
