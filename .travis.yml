@@ -19,5 +19,5 @@ deploy:
   on:
     tags: true
     branch: master
-    repo: JupiterOne/jupiter-integration-cbdefense
+    repo: JupiterOne/graph-cbdefense
     node: '8'
