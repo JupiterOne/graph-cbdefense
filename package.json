@@ -3,7 +3,7 @@
   "version": "0.5.4",
   "description": "JupiterOne managed integration for Carbon Black Defense.",
   "main": "dist/index.js",
-  "repository": "https://github.com/jupiterone/jupiter-integration-cbdefense",
+  "repository": "https://github.com/jupiterone/graph-cbdefense",
   "license": "SEE LICENSE IN LICENSE",
   "files": [
     "LICENSE",
