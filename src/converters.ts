@@ -172,6 +172,10 @@ export function mapSensorToDeviceRelationship(
       owner: agent.email,
       displayName: hostname,
       hostname,
+      publicIp: agent.lastExternalIpAddress,
+      publicIpAddress: agent.lastExternalIpAddress,
+      privateIp: agent.lastInternalIpAddress,
+      privateIpAddress: agent.lastInternalIpAddress,
     },
   };
 
