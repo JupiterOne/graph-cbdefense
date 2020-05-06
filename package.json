@@ -28,7 +28,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@jupiterone/jupiter-managed-integration-sdk": "^26.0.0",
+    "@jupiterone/jupiter-managed-integration-sdk": "^33.7.5",
     "axios": "^0.18.0"
   },
   "devDependencies": {
