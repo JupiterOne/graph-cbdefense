@@ -11,6 +11,7 @@ import {
   createSensorPolicyRelationships,
   createServiceEntity,
   createServicePolicyRelationships,
+  mapSensorToDeviceRelationship,
 } from "./converters";
 import {
   ACCOUNT_ENTITY_CLASS,
@@ -79,7 +80,7 @@ export const sensor: CbDefenseSensor = {
   rootedBySensorTime: null,
   quarantined: false,
   lastInternalIpAddress: "192.168.1.11",
-  macAddress: null,
+  macAddress: "a1b2c3d4e5f6",
   lastExternalIpAddress: "68.45.7.169",
   lastLocation: "OFFSITE",
   sensorOutOfDate: false,
@@ -118,6 +119,12 @@ export const sensorNoName: CbDefenseSensor = {
   ...sensor,
   deviceId: 3759919,
   name: null,
+  macAddress: "A1:B2:C3:D4:E5:F6",
+  avLastScanTime: 1552947617829,
+  lastResetTime: 1552947617829,
+  firstVirusActivityTime: 1552947617829,
+  lastVirusActivityTime: 1552947617829,
+  lastContact: 0,
 };
 
 export const sensors: CbDefenseSensor[] = [sensor, sensorNoName];
@@ -362,6 +369,7 @@ test("createServiceEntity", () => {
 test("createSensorEntities", () => {
   expect(createSensorEntities(sensors)).toEqual([
     {
+      ...sensor,
       _class: SENSOR_ENTITY_CLASS,
       _key: `cbdefense-sensor-${sensor.deviceId}`,
       _type: SENSOR_ENTITY_TYPE,
@@ -369,9 +377,15 @@ test("createSensorEntities", () => {
       hostname: "davids-macbook-pro",
       active: true,
       function: ["anti-malware", "activity-monitor"],
-      ...sensor,
+      macAddress: "a1:b2:c3:d4:e5:f6",
+      avLastScanTime: null,
+      lastResetTime: null,
+      firstVirusActivityTime: null,
+      lastVirusActivityTime: null,
+      lastSeenOn: 1552947617829,
     },
     {
+      ...sensorNoName,
       _class: SENSOR_ENTITY_CLASS,
       _key: `cbdefense-sensor-${sensorNoName.deviceId}`,
       _type: SENSOR_ENTITY_TYPE,
@@ -379,7 +393,12 @@ test("createSensorEntities", () => {
       hostname: "",
       active: true,
       function: ["anti-malware", "activity-monitor"],
-      ...sensorNoName,
+      macAddress: "a1:b2:c3:d4:e5:f6",
+      avLastScanTime: 1552947617829,
+      lastResetTime: 1552947617829,
+      firstVirusActivityTime: 1552947617829,
+      lastVirusActivityTime: 1552947617829,
+      lastSeenOn: null,
     },
   ]);
 });
@@ -444,4 +463,47 @@ test("createServicePolicyRelationships", () => {
       _type: SENSOR_POLICY_RELATIONSHIP_TYPE,
     },
   ]);
+});
+
+test("mapSensorToDeviceRelationship", () => {
+  const agent = createSensorEntities([sensor])[0];
+  const mapping = {
+    relationshipDirection: "FORWARD",
+    sourceEntityKey: agent._key,
+    targetFilterKeys: [["_type", "macAddress"], ["_type", "hostname", "owner"]],
+    targetEntity: {
+      _type: "user_endpoint",
+      _class: ["Device", "Host"],
+      owner: agent.email,
+      displayName: agent.hostname,
+      hostname: agent.hostname,
+      macAddress: agent.macAddress,
+      publicIp: agent.lastExternalIpAddress,
+      publicIpAddress: agent.lastExternalIpAddress,
+      privateIp: agent.lastInternalIpAddress,
+      privateIpAddress: agent.lastInternalIpAddress,
+    },
+  };
+
+  expect(
+    mapSensorToDeviceRelationship(createSensorEntities([sensor])[0]),
+  ).toEqual({
+    _key: `${agent._key}|protects|device-${agent.hostname}`,
+    _type: "cbdefense_sensor_protects_device",
+    _class: "PROTECTS",
+    _mapping: mapping,
+  });
+
+  sensor.macAddress = null;
+  mapping.targetFilterKeys = [["_type", "hostname", "owner"]];
+  mapping.targetEntity.macAddress = null;
+
+  expect(
+    mapSensorToDeviceRelationship(createSensorEntities([sensor])[0]),
+  ).toEqual({
+    _key: `${agent._key}|protects|device-${agent.hostname}`,
+    _type: "cbdefense_sensor_protects_device",
+    _class: "PROTECTS",
+    _mapping: mapping,
+  });
 });
