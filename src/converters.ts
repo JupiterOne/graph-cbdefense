@@ -59,6 +59,7 @@ export function createSensorEntities(
   data: CbDefenseSensor[],
 ): CbDefenseSensorEntity[] {
   return data.map(d => ({
+    ...d,
     _class: SENSOR_ENTITY_CLASS,
     _key: `cbdefense-sensor-${d.deviceId}`,
     _type: SENSOR_ENTITY_TYPE,
@@ -66,7 +67,16 @@ export function createSensorEntities(
     hostname: normalizeHostname(d.name),
     active: d.sensorStates !== null && d.sensorStates.indexOf("ACTIVE") >= 0,
     function: ["anti-malware", "activity-monitor"],
-    ...d,
+    macAddress: d.macAddress && formatMacAddress(d.macAddress),
+    avLastScanTime: d.avLastScanTime ? d.avLastScanTime : null,
+    firstVirusActivityTime: d.firstVirusActivityTime
+      ? d.firstVirusActivityTime
+      : null,
+    lastVirusActivityTime: d.lastVirusActivityTime
+      ? d.lastVirusActivityTime
+      : null,
+    lastResetTime: d.lastResetTime ? d.lastResetTime : null,
+    lastSeenOn: d.lastContact ? d.lastContact : null,
   }));
 }
 
@@ -160,18 +170,22 @@ export function mapSensorToDeviceRelationship(
   agent: CbDefenseSensorEntity,
 ): AgentDeviceRelationship {
   const hostname = agent.hostname;
+  const targetFilterKeys = agent.macAddress
+    ? [["_type", "macAddress"], ["_type", "hostname", "owner"]]
+    : [["_type", "hostname", "owner"]];
 
   // define target device properties via relationship mapping
   const mapping: RelationshipMapping = {
     relationshipDirection: RelationshipDirection.FORWARD,
     sourceEntityKey: agent._key,
-    targetFilterKeys: [["_type", "hostname", "owner"]],
+    targetFilterKeys,
     targetEntity: {
       _type: DEVICE_ENTITY_TYPE,
       _class: DEVICE_ENTITY_CLASS,
       owner: agent.email,
       displayName: hostname,
       hostname,
+      macAddress: agent.macAddress,
       publicIp: agent.lastExternalIpAddress,
       publicIpAddress: agent.lastExternalIpAddress,
       privateIp: agent.lastInternalIpAddress,
@@ -189,4 +203,10 @@ export function mapSensorToDeviceRelationship(
 
 function getPolicyKey(policyId: number) {
   return `cb-sensor-policy-${policyId}`;
+}
+
+function formatMacAddress(macAddress: string): string {
+  return macAddress.includes(":")
+    ? macAddress.toLowerCase()
+    : macAddress.toLowerCase().replace(/(.{2})(?!$)/g, "$1:");
 }
