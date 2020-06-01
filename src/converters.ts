@@ -171,7 +171,7 @@ export function mapSensorToDeviceRelationship(
 ): AgentDeviceRelationship {
   const hostname = agent.hostname;
   const targetFilterKeys = agent.macAddress
-    ? [["_type", "macAddress"], ["_type", "hostname", "owner"]]
+    ? [["_type", "macAddress"]]
     : [["_type", "hostname", "owner"]];
 
   // define target device properties via relationship mapping

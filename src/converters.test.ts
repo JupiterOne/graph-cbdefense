@@ -470,7 +470,7 @@ test("mapSensorToDeviceRelationship", () => {
   const mapping = {
     relationshipDirection: "FORWARD",
     sourceEntityKey: agent._key,
-    targetFilterKeys: [["_type", "macAddress"], ["_type", "hostname", "owner"]],
+    targetFilterKeys: [["_type", "macAddress"]],
     targetEntity: {
       _type: "user_endpoint",
       _class: ["Device", "Host"],
