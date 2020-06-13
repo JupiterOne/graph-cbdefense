@@ -136,21 +136,31 @@ export interface CbDefensePolicyRule {
   action: string;
 }
 
+export interface CbDefenseAlert {
+  id: string;
+}
+
 export default class CbDefenseClient {
   private axiosInstance: axios.AxiosInstance;
-  private BASE_API_URL: string;
+  private PSC_HOSTNAME: string;
+  private DEFENSE_HOSTNAME: string;
   private logger: IntegrationLogger;
   private site: string;
 
   constructor(config: CbDefenseIntegrationConfig, logger: IntegrationLogger) {
     this.site = config.site;
-    this.BASE_API_URL = `https://api-${
+
+    // See https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#explaining-the-url-parts
+    this.PSC_HOSTNAME = `https://defense-${
+      this.site
+    }.conferdeploy.net/appservices/v6/orgs/${config.orgKey}`;
+    this.DEFENSE_HOSTNAME = `https://api-${
       this.site
     }.conferdeploy.net/integrationServices/v3`;
+
     this.logger = logger;
     this.axiosInstance = axiosUtil.createInstance(
       {
-        baseURL: this.BASE_API_URL,
         headers: {
           "X-Auth-Token": `${config.apiKey}/${config.connectorId}`,
         },
@@ -163,10 +173,11 @@ export default class CbDefenseClient {
     this.logger.trace("Fetching a single Cb Defense device sensor agent...");
     try {
       const devices = await this.collectOnePage<CbDefenseSensor>(
+        this.DEFENSE_HOSTNAME,
         "device",
         "start=1&rows=1",
       );
-      this.logger.trace({}, "Fetched one device sensor agent");
+      this.logger.trace("Fetched one device sensor agent");
 
       if (devices && devices.length > 0) {
         return {
@@ -193,23 +204,53 @@ export default class CbDefenseClient {
 
   public async getSensorAgents(): Promise<CbDefenseSensor[]> {
     this.logger.trace("Fetching Cb Defense device sensor agents...");
-    const result = await this.collectAllPages<CbDefenseSensor>("device");
-    this.logger.trace({}, "Fetched device sensor agents");
+    const result = await this.collectAllPages<CbDefenseSensor>(
+      this.DEFENSE_HOSTNAME,
+      "device",
+    );
+    this.logger.trace("Fetched device sensor agents");
     return result;
   }
 
   public async getPolicies(): Promise<CbDefensePolicy[]> {
     this.logger.trace("Fetching Cb Defense policies...");
-    const result = await this.collectAllPages<CbDefensePolicy>("policy");
-    this.logger.trace({}, "Fetched policies");
+    const result = await this.collectAllPages<CbDefensePolicy>(
+      this.DEFENSE_HOSTNAME,
+      "policy",
+    );
+    this.logger.trace("Fetched policies");
     return result;
   }
 
+  public async getAlerts(): Promise<CbDefenseAlert[]> {
+    this.logger.trace("Fetching Cb Defense alerts...");
+    const fiveDaysMs = 1000 * 60 * 60 * 24 * 5;
+    const fiveDaysAgo = new Date(Date.now() - fiveDaysMs);
+
+    const response = await this.axiosInstance.post<Page<CbDefenseAlert>>(
+      `${this.PSC_HOSTNAME}/alerts/_search`,
+      {
+        criteria: {
+          create_time: {
+            start: fiveDaysAgo.toISOString(),
+            end: new Date().toISOString(),
+          },
+        },
+      },
+    );
+
+    this.logger.info({ response }, "Got de Alerts");
+    this.logger.trace("Fetched alerts");
+    const page = response.data;
+    return page.results;
+  }
+
   private async forEachPage<T>(
-    firstUri: string,
+    hostname: string,
+    path: string,
     eachFn: (page: Page<T>) => void,
   ) {
-    let nextPageUrl: string | null = `${this.BASE_API_URL}/${firstUri}`;
+    let nextPageUrl: string | null = `${hostname}/${path}`;
 
     while (nextPageUrl) {
       const response = await this.axiosInstance.get<Page<T>>(nextPageUrl);
@@ -220,7 +261,7 @@ export default class CbDefenseClient {
 
       if (page.start && page.rows) {
         if (page.totalResults < page.start + page.rows) {
-          nextPageUrl = `${this.BASE_API_URL}/${firstUri}?start=${page.start +
+          nextPageUrl = `${hostname}/${path}?start=${page.start +
             page.rows +
             1}&rows=${page.rows}`;
         } else {
@@ -232,10 +273,13 @@ export default class CbDefenseClient {
     }
   }
 
-  private async collectAllPages<T>(firstUri: string): Promise<T[]> {
+  private async collectAllPages<T>(
+    hostname: string,
+    path: string,
+  ): Promise<T[]> {
     const results: T[] = [];
 
-    await this.forEachPage<T>(firstUri, (page: Page<T>) => {
+    await this.forEachPage<T>(hostname, path, (page: Page<T>) => {
       for (const item of page.results) {
         results.push(item);
       }
@@ -244,8 +288,12 @@ export default class CbDefenseClient {
     return results;
   }
 
-  private async collectOnePage<T>(uri: string, params: string): Promise<T[]> {
-    const url = `${this.BASE_API_URL}/${uri}?${params}`;
+  private async collectOnePage<T>(
+    hostname: string,
+    path: string,
+    params: string,
+  ): Promise<T[]> {
+    const url = `${hostname}/${path}?${params}`;
     const response = await this.axiosInstance.get<Page<T>>(url);
     const page: any = response.data;
     return page.results;

@@ -40,6 +40,7 @@ export const SENSOR_POLICY_RELATIONSHIP_TYPE =
 
 export interface CbDefenseIntegrationConfig {
   site: string;
+  orgKey: string;
   connectorId: string;
   apiKey: string;
 }

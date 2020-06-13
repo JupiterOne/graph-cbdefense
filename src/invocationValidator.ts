@@ -31,17 +31,17 @@ export default async function invocationValidator(
     throw new IntegrationInstanceConfigError("Configuration missing");
   }
 
-  const { site, connectorId, apiKey } = instanceConfig;
+  const { site, orgKey, connectorId, apiKey } = instanceConfig;
 
-  if (!(site && connectorId && apiKey)) {
+  if (!(site && orgKey && connectorId && apiKey)) {
     throw new IntegrationInstanceConfigError(
-      "Configuration requires site, connectorId, and apiKey",
+      "Configuration requires site, orgKey, connectorId, and apiKey",
     );
   }
 
   if (site.match("conferdeploy")) {
     throw new IntegrationInstanceConfigError(
-      "Site is invalid, should be for example `prod05` in `https://defense-prod05.conferdeploy.net/`",
+      "Site is invalid; should be the environment only, not the full dashboard URL. For example, `prod05` in `https://defense-prod05.conferdeploy.net/`",
     );
   }
 

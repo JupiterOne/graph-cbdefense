@@ -67,6 +67,7 @@ export default async function executionHandler(
     fetchSensorEntitiesFromProvider(provider),
     fetchPolicyEntitiesFromProvider(provider),
   ]);
+  await provider.getAlerts();
 
   const [accountEntity] = newAccountEntities;
   const serviceEntity = createServiceEntity(accountEntity.accountId);

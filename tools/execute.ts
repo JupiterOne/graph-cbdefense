@@ -4,6 +4,7 @@ import invocationConfig from "../src/index";
 
 const integrationConfig = {
   site: process.env.CB_DEFENSE_LOCAL_EXECUTION_SITE as string,
+  orgKey: process.env.CB_DEFENSE_LOCAL_EXECUTION_ORG_KEY as string,
   connectorId: process.env.CB_DEFENSE_LOCAL_EXECUTION_CONNECTOR_ID as string,
   apiKey: process.env.CB_DEFENSE_LOCAL_EXECUTION_API_KEY as string,
 };
