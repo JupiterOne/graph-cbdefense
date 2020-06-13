@@ -63,6 +63,7 @@ export function createSensorEntities(
     _class: SENSOR_ENTITY_CLASS,
     _key: `cbdefense-sensor-${d.deviceId}`,
     _type: SENSOR_ENTITY_TYPE,
+    _rawData: [{ name: "default", rawData: d }],
     displayName: d.name || "cbdefense-sensor",
     hostname: normalizeHostname(d.name),
     active: d.sensorStates !== null && d.sensorStates.indexOf("ACTIVE") >= 0,
@@ -174,6 +175,21 @@ export function mapSensorToDeviceRelationship(
     ? [["_type", "macAddress"]]
     : [["_type", "hostname", "owner"]];
 
+  const platform =
+    agent.deviceType &&
+    (agent.deviceType.match(/mac/i)
+      ? "darwin"
+      : agent.deviceType.toLowerCase());
+  const osDetails = agent.osVersion;
+
+  const osPatternRegex = /^(mac os x|\w+)\s([0-9.]+)\s?(\w+)?$/i;
+  const osPatternMatch = osDetails && osDetails.match(osPatternRegex);
+
+  const osName =
+    osPatternMatch &&
+    (osPatternMatch[1].match(/mac/i) ? "macOS" : osPatternMatch[1]);
+  const osVersion = osPatternMatch && osPatternMatch[2];
+
   // define target device properties via relationship mapping
   const mapping: RelationshipMapping = {
     relationshipDirection: RelationshipDirection.FORWARD,
@@ -190,6 +206,10 @@ export function mapSensorToDeviceRelationship(
       publicIpAddress: agent.lastExternalIpAddress,
       privateIp: agent.lastInternalIpAddress,
       privateIpAddress: agent.lastInternalIpAddress,
+      platform,
+      osDetails,
+      osName,
+      osVersion,
     },
   };
 

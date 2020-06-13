@@ -373,6 +373,7 @@ test("createSensorEntities", () => {
       _class: SENSOR_ENTITY_CLASS,
       _key: `cbdefense-sensor-${sensor.deviceId}`,
       _type: SENSOR_ENTITY_TYPE,
+      _rawData: [{ name: "default", rawData: sensor }],
       displayName: sensor.name as string,
       hostname: "davids-macbook-pro",
       active: true,
@@ -389,6 +390,7 @@ test("createSensorEntities", () => {
       _class: SENSOR_ENTITY_CLASS,
       _key: `cbdefense-sensor-${sensorNoName.deviceId}`,
       _type: SENSOR_ENTITY_TYPE,
+      _rawData: [{ name: "default", rawData: sensorNoName }],
       displayName: "cbdefense-sensor",
       hostname: "",
       active: true,
@@ -482,6 +484,10 @@ test("mapSensorToDeviceRelationship", () => {
       publicIpAddress: agent.lastExternalIpAddress,
       privateIp: agent.lastInternalIpAddress,
       privateIpAddress: agent.lastInternalIpAddress,
+      platform: "darwin",
+      osDetails: "MAC OS X 10.13.6",
+      osName: "macOS",
+      osVersion: "10.13.6",
     },
   };
 
