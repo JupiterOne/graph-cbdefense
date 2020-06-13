@@ -66,7 +66,10 @@ export function createSensorEntities(
     _rawData: [{ name: "default", rawData: d }],
     displayName: d.name || "cbdefense-sensor",
     hostname: normalizeHostname(d.name),
-    active: d.sensorStates !== null && d.sensorStates.indexOf("ACTIVE") >= 0,
+    active:
+      d.status !== "INACTIVE" &&
+      d.sensorStates !== null &&
+      d.sensorStates.indexOf("ACTIVE") >= 0,
     function: ["anti-malware", "activity-monitor"],
     macAddress: d.macAddress && formatMacAddress(d.macAddress),
     avLastScanTime: d.avLastScanTime ? d.avLastScanTime : null,
