@@ -4,7 +4,7 @@ import {
   IntegrationValidationContext,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 import CbDefenseClient from "./CbDefenseClient";
-import { CbDefenseIntegrationConfig } from "./types";
+import { CarbonBlackIntegrationConfig } from "./types";
 
 /**
  * Performs validation of the execution before the execution handler function is
@@ -25,7 +25,7 @@ export default async function invocationValidator(
   context: IntegrationValidationContext,
 ) {
   const { config } = context.instance;
-  const instanceConfig = config as CbDefenseIntegrationConfig;
+  const instanceConfig = config as CarbonBlackIntegrationConfig;
 
   if (!instanceConfig) {
     throw new IntegrationInstanceConfigError("Configuration missing");

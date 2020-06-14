@@ -1,189 +1,165 @@
+import camelCase from "lodash/camelCase";
+
 import {
+  convertProperties,
+  createIntegrationEntity,
   EntityFromIntegration,
+  getTime,
+  MappedRelationshipFromIntegration,
   RelationshipDirection,
   RelationshipFromIntegration,
   RelationshipMapping,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 
+import { CarbonBlackAccount, CarbonBlackDeviceSensor } from "./CbDefenseClient";
 import {
-  CbDefenseAccount,
-  CbDefensePolicy,
-  CbDefenseSensor,
-} from "./CbDefenseClient";
-import {
+  ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
   ACCOUNT_ENTITY_CLASS,
   ACCOUNT_ENTITY_TYPE,
-  AgentDeviceRelationship,
-  CbDefenseAccountEntity,
-  CbDefensePolicyEntity,
-  CbDefenseSensorEntity,
-  CbDefenseServiceEntity,
+  ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
   DEVICE_ENTITY_CLASS,
   DEVICE_ENTITY_TYPE,
-  POLICY_ENTITY_CLASS,
-  POLICY_ENTITY_TYPE,
+  DEVICE_SENSOR_ENTITY_CLASS,
+  DEVICE_SENSOR_ENTITY_TYPE,
   SENSOR_DEVICE_RELATIONSHIP_TYPE,
-  SENSOR_ENTITY_CLASS,
-  SENSOR_ENTITY_TYPE,
-  SENSOR_POLICY_RELATIONSHIP_TYPE,
   SERVICE_ENTITY_CLASS,
   SERVICE_ENTITY_TYPE,
 } from "./types";
 import { normalizeHostname } from "./util/normalizeHostname";
 
+/**
+ * An extension of `EntityFromIntegration` used to build mapped relationships to
+ * the actual user endpoint device entities.
+ */
+type DeviceSensorEntity = EntityFromIntegration & {
+  hostname: string;
+  macAddress?: string;
+  email: string;
+  lastExternalIpAddress: string;
+  lastInternalIpAddress: string;
+  os: string;
+  osVersion: string;
+};
+
+function siteWeblink(site: string): string {
+  return `https://defense-${site}.conferdeploy.net`;
+}
+
 export function createAccountEntity(
-  data: CbDefenseAccount,
-): CbDefenseAccountEntity {
-  return {
-    _class: ACCOUNT_ENTITY_CLASS,
-    _key: `carbonblack-account-${data.organizationId}`,
-    _type: ACCOUNT_ENTITY_TYPE,
-    accountId: data.organizationId,
-    displayName: data.organizationName,
-    name: data.organizationName,
-    organization: data.organizationName.replace(/\.[a-z]{2,3}$/, ""),
-    webLink: `https://defense-${data.site}.conferdeploy.net`,
-  };
-}
-
-export function createServiceEntity(accountId: number): CbDefenseServiceEntity {
-  return {
-    _class: SERVICE_ENTITY_CLASS,
-    _key: `${SERVICE_ENTITY_TYPE}-${accountId}`,
-    _type: SERVICE_ENTITY_TYPE,
-    displayName: "CB Endpoint Protection Service",
-  };
-}
-
-export function createSensorEntities(
-  data: CbDefenseSensor[],
-): CbDefenseSensorEntity[] {
-  return data.map(d => ({
-    ...d,
-    _class: SENSOR_ENTITY_CLASS,
-    _key: `cbdefense-sensor-${d.deviceId}`,
-    _type: SENSOR_ENTITY_TYPE,
-    _rawData: [{ name: "default", rawData: d }],
-    displayName: d.name || "cbdefense-sensor",
-    hostname: normalizeHostname(d.name),
-    active:
-      d.status !== "INACTIVE" &&
-      d.sensorStates !== null &&
-      d.sensorStates.indexOf("ACTIVE") >= 0,
-    function: ["anti-malware", "activity-monitor"],
-    macAddress: d.macAddress && formatMacAddress(d.macAddress),
-    avLastScanTime: d.avLastScanTime ? d.avLastScanTime : null,
-    firstVirusActivityTime: d.firstVirusActivityTime
-      ? d.firstVirusActivityTime
-      : null,
-    lastVirusActivityTime: d.lastVirusActivityTime
-      ? d.lastVirusActivityTime
-      : null,
-    lastResetTime: d.lastResetTime ? d.lastResetTime : null,
-    lastSeenOn: d.lastContact ? d.lastContact : null,
-  }));
-}
-
-export function createPolicyEntities(
-  data: CbDefensePolicy[],
-): CbDefensePolicyEntity[] {
-  return data.map(d => ({
-    _class: POLICY_ENTITY_CLASS,
-    _key: getPolicyKey(d.id),
-    _type: POLICY_ENTITY_TYPE,
-    _rawData: [
-      {
-        name: "default",
-        rawData: d,
+  data: CarbonBlackAccount,
+): EntityFromIntegration {
+  return createIntegrationEntity({
+    entityData: {
+      source: data,
+      assign: {
+        _key: `carbonblack-account-${data.organization_id}`,
+        _class: ACCOUNT_ENTITY_CLASS,
+        _type: ACCOUNT_ENTITY_TYPE,
+        accountId: data.organization_id,
+        name: data.organization_name,
+        organization: data.organization_name.replace(/\.[a-z]{2,3}$/, ""),
+        webLink: siteWeblink(data.site),
       },
-    ],
-    displayName: d.name,
-    name: d.name,
-    description: d.description,
-    id: d.id,
-    version: d.version,
-    priorityLevel: d.priorityLevel,
-    systemPolicy: d.systemPolicy,
-    latestRevision: d.latestRevision,
-  }));
+    },
+  });
 }
 
-export function createAccountRelationships(
-  account: CbDefenseAccountEntity,
-  entities: EntityFromIntegration[],
-  type: string,
-) {
-  const relationships = [];
-  for (const entity of entities) {
-    relationships.push(createAccountRelationship(account, entity, type));
+export function createServiceEntity(
+  site: string,
+  organizationId: number,
+): EntityFromIntegration {
+  return createIntegrationEntity({
+    entityData: {
+      source: {},
+      assign: {
+        _key: `${SERVICE_ENTITY_TYPE}-${organizationId}`,
+        _class: SERVICE_ENTITY_CLASS,
+        _type: SERVICE_ENTITY_TYPE,
+        name: "CB Endpoint Protection Service",
+        category: ["software", "other"],
+        endpoints: [siteWeblink(site)],
+      },
+    },
+  });
+}
+
+const TIME_PROPERTY_NAME_REGEX = /^\w+_time$/;
+function convertTimeProperties(data: any): object {
+  const timeProperties: any = {};
+  for (const key in data) {
+    if (TIME_PROPERTY_NAME_REGEX.test(key)) {
+      timeProperties[camelCase(key)] = getTime(data[key]);
+    }
   }
-  return relationships;
+  return timeProperties;
 }
 
-export function createAccountRelationship(
-  account: CbDefenseAccountEntity,
-  entity: EntityFromIntegration,
-  type: string,
+export function createDeviceSensorEntity(
+  data: CarbonBlackDeviceSensor,
+): DeviceSensorEntity {
+  return createIntegrationEntity({
+    entityData: {
+      source: data,
+      assign: {
+        ...convertProperties(data),
+        ...convertTimeProperties(data),
+        _key: `cbdefense-sensor-${data.id}`,
+        _class: DEVICE_SENSOR_ENTITY_CLASS,
+        _type: DEVICE_SENSOR_ENTITY_TYPE,
+        id: String(data.id),
+        name: data.name || "cbdefense-sensor",
+        hostname: normalizeHostname(data.name),
+        active:
+          data.status !== "INACTIVE" &&
+          data.sensor_states != null &&
+          data.sensor_states.indexOf("ACTIVE") >= 0,
+        function: ["anti-malware", "activity-monitor"],
+        macAddress: formatMacAddress(data.mac_address),
+        lastSeenOn: getTime(data.last_contact_time),
+      },
+    },
+  }) as DeviceSensorEntity;
+}
+
+export function createAccountServiceRelationship(
+  account: EntityFromIntegration,
+  service: EntityFromIntegration,
 ): RelationshipFromIntegration {
   return {
     _class: "HAS",
     _fromEntityKey: account._key,
-    _key: `${account._key}_has_${entity._key}`,
-    _toEntityKey: entity._key,
-    _type: type,
+    _key: `${account._key}_has_${service._key}`,
+    _toEntityKey: service._key,
+    _type: ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
   };
 }
 
-export function createServicePolicyRelationships(
-  service: CbDefenseServiceEntity,
-  policies: CbDefensePolicyEntity[],
-) {
-  const relationships = [];
-  for (const p of policies) {
-    relationships.push({
-      _class: "ENFORCES",
-      _fromEntityKey: p._key,
-      _key: `${p._key}_enforces_${service._key}`,
-      _toEntityKey: service._key,
-      _type: SENSOR_POLICY_RELATIONSHIP_TYPE,
-    });
-  }
-  return relationships;
-}
-
-export function createSensorPolicyRelationships(
-  sensors: CbDefenseSensorEntity[],
-) {
-  const relationships = [];
-  for (const s of sensors) {
-    if (!!s.policyId) {
-      const policyKey = getPolicyKey(s.policyId);
-      relationships.push({
-        _class: "ASSIGNED",
-        _fromEntityKey: s._key,
-        _key: `${s._key}_assigned_${policyKey}`,
-        _toEntityKey: policyKey,
-        _type: SENSOR_POLICY_RELATIONSHIP_TYPE,
-      });
-    }
-  }
-  return relationships;
+export function createAccountDeviceSensorRelationship(
+  account: EntityFromIntegration,
+  device: EntityFromIntegration,
+): RelationshipFromIntegration {
+  return {
+    _class: "HAS",
+    _fromEntityKey: account._key,
+    _key: `${account._key}_has_${device._key}`,
+    _toEntityKey: device._key,
+    _type: ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
+  };
 }
 
 export function mapSensorToDeviceRelationship(
-  agent: CbDefenseSensorEntity,
-): AgentDeviceRelationship {
-  const hostname = agent.hostname;
-  const targetFilterKeys = agent.macAddress
+  sensor: DeviceSensorEntity,
+): MappedRelationshipFromIntegration {
+  const hostname = sensor.hostname;
+  const targetFilterKeys = sensor.macAddress
     ? [["_type", "macAddress"]]
     : [["_type", "hostname", "owner"]];
 
   const platform =
-    agent.deviceType &&
-    (agent.deviceType.match(/mac/i)
+    sensor.os && sensor.os.match(/mac/i)
       ? "darwin"
-      : agent.deviceType.toLowerCase());
-  const osDetails = agent.osVersion;
+      : sensor.os.toLowerCase();
+  const osDetails = sensor.osVersion;
 
   const osPatternRegex = /^(mac os x|\w+)\s([0-9.]+)\s?(\w+)?$/i;
   const osPatternMatch = osDetails && osDetails.match(osPatternRegex);
@@ -196,19 +172,19 @@ export function mapSensorToDeviceRelationship(
   // define target device properties via relationship mapping
   const mapping: RelationshipMapping = {
     relationshipDirection: RelationshipDirection.FORWARD,
-    sourceEntityKey: agent._key,
+    sourceEntityKey: sensor._key,
     targetFilterKeys,
     targetEntity: {
       _type: DEVICE_ENTITY_TYPE,
       _class: DEVICE_ENTITY_CLASS,
-      owner: agent.email,
+      owner: sensor.email,
       displayName: hostname,
       hostname,
-      macAddress: agent.macAddress,
-      publicIp: agent.lastExternalIpAddress,
-      publicIpAddress: agent.lastExternalIpAddress,
-      privateIp: agent.lastInternalIpAddress,
-      privateIpAddress: agent.lastInternalIpAddress,
+      macAddress: sensor.macAddress,
+      publicIp: sensor.lastExternalIpAddress,
+      publicIpAddress: sensor.lastExternalIpAddress,
+      privateIp: sensor.lastInternalIpAddress,
+      privateIpAddress: sensor.lastInternalIpAddress,
       platform,
       osDetails,
       osName,
@@ -217,19 +193,17 @@ export function mapSensorToDeviceRelationship(
   };
 
   return {
-    _key: `${agent._key}|protects|device-${hostname}`,
+    _key: `${sensor._key}|protects|device-${hostname}`,
     _type: SENSOR_DEVICE_RELATIONSHIP_TYPE,
     _class: "PROTECTS",
     _mapping: mapping,
   };
 }
 
-function getPolicyKey(policyId: number) {
-  return `cb-sensor-policy-${policyId}`;
-}
-
-function formatMacAddress(macAddress: string): string {
-  return macAddress.includes(":")
-    ? macAddress.toLowerCase()
-    : macAddress.toLowerCase().replace(/(.{2})(?!$)/g, "$1:");
+function formatMacAddress(macAddress: string): string | undefined {
+  if (macAddress) {
+    return macAddress.includes(":")
+      ? macAddress.toLowerCase()
+      : macAddress.toLowerCase().replace(/(.{2})(?!$)/g, "$1:");
+  }
 }
