@@ -10,17 +10,6 @@ import {
 import { CarbonBlackIntegrationConfig } from "./types";
 import * as axiosUtil from "./util/axios-util";
 
-// interface Page<T> {
-//   latestTime: number;
-//   success: boolean;
-//   message: string;
-//   totalResults: number;
-//   elapsed: number;
-//   start?: number;
-//   rows?: number;
-//   results: T[];
-// }
-
 export type CarbonBlackAccount = Opaque<any, "CarbonBlackAccount">;
 export type CarbonBlackDeviceSensor = Opaque<any, "CarbonBlackDeviceSensor">;
 export type CarbonBlackAlert = Opaque<any, "CarbonBlackAlert">;
@@ -63,7 +52,7 @@ export default class CbDefenseClient {
         `${this.platformBaseUrl}/devices/_search`,
         {
           rows: 1,
-          start: 1,
+          start: 0,
         },
       );
 
@@ -94,18 +83,7 @@ export default class CbDefenseClient {
   public async iterateDevices(
     callback: (agent: CarbonBlackDeviceSensor) => void,
   ): Promise<void> {
-    // TODO paginate
-    const response = await this.axiosInstance.post(
-      `${this.platformBaseUrl}/devices/_search`,
-      {
-        rows: 1,
-        start: 1,
-      },
-    );
-    const results = response.data.results;
-    this.logger.info({ pageCount: results.length }, "Fetched page of devices");
-
-    results.forEach(callback);
+    return this.iterateResults("/devices/_search", callback);
   }
 
   public async iterateAlerts(
@@ -135,46 +113,42 @@ export default class CbDefenseClient {
     results.forEach(callback);
   }
 
-  // private async forEachPage<T>(
-  //   hostname: string,
-  //   path: string,
-  //   eachFn: (page: Page<T>) => void,
-  // ) {
-  //   let nextPageUrl: string | null = `${hostname}/${path}`;
+  private async iterateResults<T>(
+    platformPath: string,
+    callback: (agent: T) => void,
+  ): Promise<void> {
+    const platformUrl = `${this.platformBaseUrl}${platformPath}`;
+    const rows = 200;
 
-  //   while (nextPageUrl) {
-  //     const response = await this.axiosInstance.get(nextPageUrl);
+    let pagesProcessed = 0;
+    let rowsProcessed = 0;
+    let finished = false;
 
-  //     const page: any = response.data;
+    while (!finished) {
+      const start = rowsProcessed;
 
-  //     eachFn(page);
+      const response = await this.axiosInstance.post(platformUrl, {
+        rows,
+        start,
+      });
+      const results = response.data.results;
 
-  //     if (page.start && page.rows) {
-  //       if (page.totalResults < page.start + page.rows) {
-  //         nextPageUrl = `${hostname}/${path}?start=${page.start +
-  //           page.rows +
-  //           1}&rows=${page.rows}`;
-  //       } else {
-  //         nextPageUrl = null;
-  //       }
-  //     } else {
-  //       nextPageUrl = null;
-  //     }
-  //   }
-  // }
+      pagesProcessed++;
+      rowsProcessed += results.length;
+      finished = response.data.num_found <= rowsProcessed;
 
-  // private async collectAllPages<T>(
-  //   hostname: string,
-  //   path: string,
-  // ): Promise<T[]> {
-  //   const results: T[] = [];
+      this.logger.info(
+        {
+          found: response.data.num_found,
+          rowsProcessed,
+          rowsTotal: rowsProcessed,
+          pagesProcessed,
+          finished,
+        },
+        `Fetched page for ${platformUrl}`,
+      );
 
-  //   await this.forEachPage<T>(hostname, path, (page: Page<T>) => {
-  //     for (const item of page.results) {
-  //       results.push(item);
-  //     }
-  //   });
-
-  //   return results;
-  // }
+      results.forEach(callback);
+    }
+  }
 }
