@@ -83,40 +83,39 @@ export default class CbDefenseClient {
   public async iterateDevices(
     callback: (agent: CarbonBlackDeviceSensor) => void,
   ): Promise<void> {
-    return this.iterateResults("/devices/_search", callback);
+    return this.iterateResults({ platformPath: "/devices/_search", callback });
   }
 
   public async iterateAlerts(
     callback: (alert: CarbonBlackAlert) => void,
+    alertsSince: Date,
   ): Promise<void> {
-    // TODO use last successful execution time
-    const fiveDaysMs = 1000 * 60 * 60 * 24 * 5;
-    const fiveDaysAgo = new Date(Date.now() - fiveDaysMs);
-
-    // TODO paginate
-    const response = await this.axiosInstance.post(
-      `${this.platformBaseUrl}/alerts/_search`,
-      {
-        criteria: {
-          create_time: {
-            start: fiveDaysAgo.toISOString(),
-            end: new Date().toISOString(),
-          },
+    return this.iterateResults({
+      platformPath: "/alerts/_serach",
+      criteria: {
+        create_time: {
+          start: alertsSince.toISOString(),
+          end: new Date().toISOString(),
         },
       },
-    );
-
-    const results = response.data.results;
-
-    this.logger.info({ pageCount: results.length }, "Fetched page of alerts");
-
-    results.forEach(callback);
+      callback,
+    });
   }
 
-  private async iterateResults<T>(
-    platformPath: string,
-    callback: (agent: T) => void,
-  ): Promise<void> {
+  private async iterateResults<T>({
+    platformPath,
+    criteria,
+    callback,
+  }: {
+    platformPath: string;
+    criteria?: {
+      create_time: {
+        start: string;
+        end: string;
+      };
+    };
+    callback: (agent: T) => void;
+  }): Promise<void> {
     const platformUrl = `${this.platformBaseUrl}${platformPath}`;
     const rows = 200;
 
@@ -130,6 +129,7 @@ export default class CbDefenseClient {
       const response = await this.axiosInstance.post(platformUrl, {
         rows,
         start,
+        criteria,
       });
       const results = response.data.results;
 

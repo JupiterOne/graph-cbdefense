@@ -3,24 +3,34 @@ import camelCase from "lodash/camelCase";
 import {
   convertProperties,
   createIntegrationEntity,
+  createIntegrationRelationship,
   EntityFromIntegration,
   getTime,
+  IntegrationRelationship,
   MappedRelationshipFromIntegration,
   RelationshipDirection,
-  RelationshipFromIntegration,
   RelationshipMapping,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 
-import { CarbonBlackAccount, CarbonBlackDeviceSensor } from "./CbDefenseClient";
+import {
+  CarbonBlackAccount,
+  CarbonBlackAlert,
+  CarbonBlackDeviceSensor,
+} from "./CbDefenseClient";
 import {
   ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
   ACCOUNT_ENTITY_CLASS,
   ACCOUNT_ENTITY_TYPE,
   ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
+  ALERT_ENTITY_CLASS,
+  ALERT_ENTITY_TYPE,
   DEVICE_ENTITY_CLASS,
   DEVICE_ENTITY_TYPE,
   DEVICE_SENSOR_ENTITY_CLASS,
   DEVICE_SENSOR_ENTITY_TYPE,
+  FindingSeverityNormal,
+  FindingSeverityNormalName,
+  FindingSeverityNormalNames,
   SENSOR_DEVICE_RELATIONSHIP_TYPE,
   SERVICE_ENTITY_CLASS,
   SERVICE_ENTITY_TYPE,
@@ -39,6 +49,14 @@ type DeviceSensorEntity = EntityFromIntegration & {
   lastInternalIpAddress: string;
   os: string;
   osVersion: string;
+};
+
+/**
+ * An extensions of `EntityFromIntegration` used to build a relationship between
+ * the sensor of a device and the alerts associated with the device.
+ */
+type AlertFindingEntity = EntityFromIntegration & {
+  deviceId: number;
 };
 
 function siteWeblink(site: string): string {
@@ -103,7 +121,7 @@ export function createDeviceSensorEntity(
       assign: {
         ...convertProperties(data),
         ...convertTimeProperties(data),
-        _key: `cbdefense-sensor-${data.id}`,
+        _key: deviceSensorKey(data.id),
         _class: DEVICE_SENSOR_ENTITY_CLASS,
         _type: DEVICE_SENSOR_ENTITY_TYPE,
         id: String(data.id),
@@ -121,30 +139,125 @@ export function createDeviceSensorEntity(
   }) as DeviceSensorEntity;
 }
 
+function deviceSensorKey(deviceId: number): string {
+  return `cbdefense-sensor-${deviceId}`;
+}
+
+export function createAlertFindingEntity(
+  data: CarbonBlackAlert,
+): AlertFindingEntity {
+  return createIntegrationEntity({
+    entityData: {
+      source: data,
+      assign: {
+        ...convertProperties(data),
+        _key: `cb-alert-${data.id}`,
+        _type: ALERT_ENTITY_TYPE,
+        _class: ALERT_ENTITY_CLASS,
+        name: data.threat_id.slice(0, 7),
+        createdOn: getTime(data.create_time),
+        updatedOn: getTime(data.last_update_time),
+        createTime: getTime(data.create_time),
+        lastUpdateTime: getTime(data.last_update_time),
+        firstEventTime: getTime(data.first_event_time),
+        lastEventTime: getTime(data.last_event_time),
+        severity: normalizeSeverity(data.severity)[1],
+        alertNumericSeverity: data.severity,
+        alertSeverity: severityString(data.severity),
+
+        // When the alert exists, it is considered open
+        open: true,
+
+        // TODO update integration SDK to latest data-model, which removes these
+        // as required properties
+        production: true,
+        public: true,
+      },
+    },
+  }) as AlertFindingEntity;
+}
+
+/**
+ * Converts an Carbon Black alert numeric severity to a Carbon Black severity string. This is
+ * not a normalized value, but one described in their product guide. Providing
+ * this value allows users to search for terms documented by Carbon Black.
+ *
+ * @see
+ * https://www.vmware.com/content/dam/digitalmarketing/vmware/en/pdf/products/vmware-cb-defense-integration-confgiurtion-guide-v2.pdf
+ * @param numericSeverity the alert severity numeric value
+ */
+function severityString(numericSeverity: number): string {
+  if (numericSeverity < 4) {
+    return "Minor";
+  } else if (numericSeverity < 8) {
+    return "Severe";
+  } else if (numericSeverity < 11) {
+    return "Critical";
+  } else {
+    return "Unknown";
+  }
+}
+
+/**
+ * Converts a Carbon Black alert numeric severity to J1 normalized
+ * numeric values.
+ *
+ * @see
+ * https://www.vmware.com/content/dam/digitalmarketing/vmware/en/pdf/products/vmware-cb-defense-integration-confgiurtion-guide-v2.pdf
+ * @param numericSeverity the alert severity numeric value
+ */
+export function normalizeSeverity(
+  numericSeverity: number,
+): [FindingSeverityNormal, FindingSeverityNormalName] {
+  const n = (
+    severity: FindingSeverityNormal,
+  ): [FindingSeverityNormal, FindingSeverityNormalName] => {
+    return [severity, FindingSeverityNormalNames[severity]];
+  };
+
+  if (numericSeverity === 0) {
+    return n(FindingSeverityNormal.Informational);
+  } else if (numericSeverity < 4) {
+    return n(FindingSeverityNormal.Low);
+  } else if (numericSeverity < 6) {
+    return n(FindingSeverityNormal.Medium);
+  } else if (numericSeverity < 8) {
+    return n(FindingSeverityNormal.High);
+  } else if (numericSeverity <= 10) {
+    return n(FindingSeverityNormal.Critical);
+  } else {
+    return n(FindingSeverityNormal.Unknown);
+  }
+}
+
 export function createAccountServiceRelationship(
   account: EntityFromIntegration,
   service: EntityFromIntegration,
-): RelationshipFromIntegration {
-  return {
+): IntegrationRelationship {
+  return createIntegrationRelationship({
     _class: "HAS",
-    _fromEntityKey: account._key,
-    _key: `${account._key}_has_${service._key}`,
-    _toEntityKey: service._key,
-    _type: ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
-  };
+    from: account,
+    to: service,
+    properties: {
+      _key: `${account._key}_has_${service._key}`,
+      _type: ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
+    },
+  });
 }
 
 export function createAccountDeviceSensorRelationship(
   account: EntityFromIntegration,
   device: EntityFromIntegration,
-): RelationshipFromIntegration {
-  return {
+): IntegrationRelationship {
+  return createIntegrationRelationship({
     _class: "HAS",
-    _fromEntityKey: account._key,
-    _key: `${account._key}_has_${device._key}`,
-    _toEntityKey: device._key,
-    _type: ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
-  };
+    from: account,
+    to: device,
+    properties: {
+      _key: `${account._key}_has_${device._key}`,
+      _type: ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
+    },
+  });
 }
 
 export function mapSensorToDeviceRelationship(
@@ -198,6 +311,18 @@ export function mapSensorToDeviceRelationship(
     _class: "PROTECTS",
     _mapping: mapping,
   };
+}
+
+export function createDeviceSensorAlertFindingRelationship(
+  alertFinding: AlertFindingEntity,
+): IntegrationRelationship {
+  return createIntegrationRelationship({
+    _class: "IDENTIFIED",
+    fromKey: deviceSensorKey(alertFinding.deviceId),
+    fromType: DEVICE_SENSOR_ENTITY_TYPE,
+    toKey: alertFinding._key,
+    toType: alertFinding._type,
+  });
 }
 
 function formatMacAddress(macAddress: string): string | undefined {

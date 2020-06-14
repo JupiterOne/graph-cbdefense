@@ -3,6 +3,7 @@ import {
   IntegrationExecutionContext,
   IntegrationExecutionResult,
   IntegrationRelationship,
+  IntegrationServiceClient,
   MappedRelationshipFromIntegration,
   PersisterOperationsResult,
   summarizePersisterOperationsResults,
@@ -12,6 +13,8 @@ import {
   createAccountDeviceSensorRelationship,
   createAccountEntity,
   createAccountServiceRelationship,
+  createAlertFindingEntity,
+  createDeviceSensorAlertFindingRelationship,
   createDeviceSensorEntity,
   createServiceEntity,
   mapSensorToDeviceRelationship,
@@ -56,11 +59,9 @@ export default async function executionHandler(
         ...persister.processEntities(oldAccountEntities, [newAccountEntity]),
         ...persister.processEntities(oldServiceEntities, [newServiceEntity]),
       ],
-      [
-        ...persister.processRelationships(oldAccountServiceRelationships, [
-          createAccountServiceRelationship(newAccountEntity, newServiceEntity),
-        ]),
-      ],
+      persister.processRelationships(oldAccountServiceRelationships, [
+        createAccountServiceRelationship(newAccountEntity, newServiceEntity),
+      ]),
     ]),
   );
 
@@ -93,12 +94,10 @@ export default async function executionHandler(
 
   results.push(
     await persister.publishPersisterOperations([
-      [
-        ...persister.processEntities(
-          oldDeviceSensorEntities,
-          newDeviceSensorEntities,
-        ),
-      ],
+      persister.processEntities(
+        oldDeviceSensorEntities,
+        newDeviceSensorEntities,
+      ),
       [
         ...persister.processRelationships(
           oldAccountDeviceSensorRelationships,
@@ -112,7 +111,40 @@ export default async function executionHandler(
     ]),
   );
 
+  const alertsSinceDate = await determineAlertsSinceDate(
+    context.clients.getClients().integrationService,
+  );
+
+  const recentAlertFindingEntities: EntityFromIntegration[] = [];
+  const deviceSensorAlertFindingRelationships: IntegrationRelationship[] = [];
+  await provider.iterateAlerts(alert => {
+    const newFindingEntity = createAlertFindingEntity(alert);
+    recentAlertFindingEntities.push(newFindingEntity);
+    deviceSensorAlertFindingRelationships.push(
+      createDeviceSensorAlertFindingRelationship(newFindingEntity),
+    );
+  }, alertsSinceDate);
+
+  results.push(
+    await persister.publishPersisterOperations([
+      persister.processEntities([], recentAlertFindingEntities),
+      persister.processRelationships([], deviceSensorAlertFindingRelationships),
+    ]),
+  );
+
   return {
     operations: summarizePersisterOperationsResults(...results),
   };
+}
+
+async function determineAlertsSinceDate(
+  integrationService: IntegrationServiceClient,
+): Promise<Date> {
+  const lastSuccessStartTime = await integrationService.lastSuccessfulSynchronizationTime();
+  if (lastSuccessStartTime) {
+    return new Date(lastSuccessStartTime);
+  } else {
+    const fiveDaysMs = 1000 * 60 * 60 * 24 * 5;
+    return new Date(Date.now() - fiveDaysMs);
+  }
 }

@@ -1,8 +1,12 @@
+import { RelationshipFromIntegration } from "@jupiterone/jupiter-managed-integration-sdk";
+
 import { CarbonBlackAccount, CarbonBlackDeviceSensor } from "./CbDefenseClient";
 import {
   createAccountDeviceSensorRelationship,
   createAccountEntity,
   createAccountServiceRelationship,
+  createAlertFindingEntity,
+  createDeviceSensorAlertFindingRelationship,
   createDeviceSensorEntity,
   createServiceEntity,
   mapSensorToDeviceRelationship,
@@ -12,6 +16,8 @@ import {
   ACCOUNT_ENTITY_CLASS,
   ACCOUNT_ENTITY_TYPE,
   ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
+  ALERT_ENTITY_CLASS,
+  ALERT_ENTITY_TYPE,
   DEVICE_SENSOR_ENTITY_CLASS,
   DEVICE_SENSOR_ENTITY_TYPE,
   SERVICE_ENTITY_CLASS,
@@ -33,6 +39,7 @@ test("createAccountDeviceSensorRelationship", () => {
     _key: `${accountEntity._key}_has_${deviceEntity._key}`,
     _toEntityKey: deviceEntity._key,
     _type: ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
+    displayName: "HAS",
   });
 });
 
@@ -51,6 +58,7 @@ test("createAccountServiceRelationship", () => {
     _key: `${accountEntity._key}_has_${serviceEntity._key}`,
     _toEntityKey: serviceEntity._key,
     _type: ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
+    displayName: "HAS",
   });
 });
 
@@ -300,4 +308,89 @@ test("mapSensorToDeviceRelationship", () => {
       targetEntity: { ...mapping.targetEntity, macAddress: undefined },
     },
   });
+});
+
+test("createAlertEntity", () => {
+  const data = {
+    id: "038894832709076d63111e99466f73575fcf3ca",
+    legacy_alert_id: "1DDU8H9N",
+    org_key: "ASDF1234",
+    create_time: "2019-09-13T14:17:21.668Z",
+    last_update_time: "2019-09-13T14:17:21.668Z",
+    first_event_time: "2019-09-13T14:16:55.878Z",
+    last_event_time: "2019-09-13T14:16:55.878Z",
+    threat_id: "b7ce4f79e8903c09d2cd6b615c965c9f",
+    severity: 3,
+    category: "MONITORED",
+    Device_id: 123,
+    device_os: "MAC",
+    device_os_version: "<OS Version>",
+    device_name: "<System-Name>",
+    device_username: "support@carbonblack.com",
+    policy_id: 1,
+    policy_name: "default",
+    target_value: "MISSION_CRITICAL",
+  };
+
+  expect(createAlertFindingEntity(data)).toEqual({
+    _rawData: [
+      {
+        name: "default",
+        rawData: data,
+      },
+    ],
+
+    _key: "cb-alert-038894832709076d63111e99466f73575fcf3ca",
+    _type: ALERT_ENTITY_TYPE,
+    _class: ALERT_ENTITY_CLASS,
+
+    name: "b7ce4f7",
+    displayName: "b7ce4f7",
+    createTime: 1568384241668,
+    lastUpdateTime: 1568384241668,
+    createdOn: 1568384241668,
+    updatedOn: 1568384241668,
+    firstEventTime: 1568384215878,
+    lastEventTime: 1568384215878,
+
+    id: "038894832709076d63111e99466f73575fcf3ca",
+    legacyAlertId: "1DDU8H9N",
+    orgKey: "ASDF1234",
+    threatId: "b7ce4f79e8903c09d2cd6b615c965c9f",
+    category: "MONITORED",
+    deviceId: 123,
+    deviceOs: "MAC",
+    deviceOsVersion: "<OS Version>",
+    deviceName: "<System-Name>",
+    deviceUsername: "support@carbonblack.com",
+    policyId: 1,
+    policyName: "default",
+    targetValue: "MISSION_CRITICAL",
+
+    severity: "Low",
+    alertNumericSeverity: 3,
+    alertSeverity: "Minor",
+
+    open: true,
+
+    production: true,
+    public: true,
+  });
+});
+
+test("createDeviceSensorAlertFindingRelationship", () => {
+  expect(
+    createDeviceSensorAlertFindingRelationship({
+      _key: "cb-alert-123",
+      _type: ALERT_ENTITY_TYPE,
+      deviceId: 9387,
+    }),
+  ).toEqual({
+    _key: "cbdefense-sensor-9387|identified|cb-alert-123",
+    _type: "cbdefense_sensor_identified_alert",
+    _class: "IDENTIFIED",
+    _fromEntityKey: "cbdefense-sensor-9387",
+    _toEntityKey: "cb-alert-123",
+    displayName: "IDENTIFIED",
+  } as RelationshipFromIntegration);
 });
