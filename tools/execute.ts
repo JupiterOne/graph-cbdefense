@@ -19,5 +19,7 @@ executeIntegrationLocal(
   invocationArgs,
 ).catch(err => {
   console.error(err);
-  process.exit(1);
+  process.stdout.end(() => {
+    process.exit(1);
+  });
 });
