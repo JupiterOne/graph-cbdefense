@@ -13,6 +13,7 @@ module.exports = {
   ],
   moduleFileExtensions: [...defaults.moduleFileExtensions, "ts"],
   testEnvironment: "node",
+  setupFilesAfterEnv: ["./jest.env.js"],
   clearMocks: true,
   collectCoverage: true,
   coverageThreshold: {
