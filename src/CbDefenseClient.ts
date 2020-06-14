@@ -91,7 +91,7 @@ export default class CbDefenseClient {
     alertsSince: Date,
   ): Promise<void> {
     return this.iterateResults({
-      platformPath: "/alerts/_serach",
+      platformPath: "/alerts/_search",
       criteria: {
         create_time: {
           start: alertsSince.toISOString(),
