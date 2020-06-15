@@ -37,6 +37,7 @@ The following entity resources are ingested when the integration runs:
 | Account                 | `carbonblack_psc_account` : `Account` |
 | Service                 | `cb_endpoint_protection` : `Service`  |
 | Device Sensor Agent     | `cbdefense_sensor` : `HostAgent`      |
+| Alert                   | `cbdefense_alert` : `Finding`         |
 
 ## Relationships
 
@@ -47,3 +48,4 @@ The following relationships are created/mapped:
 | `carbonblack_psc_account` **HAS** `cbdefense_sensor`       |
 | `carbonblack_psc_account` **HAS** `cb_endpoint_protection` |
 | `cbdefense_sensor` **ASSIGNED** `cb_sensor_policy`         |
+| `cbdefense_sensor` **IDENTIFIED** `cbdefense_alert`        |
