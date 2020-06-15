@@ -5,23 +5,10 @@ module.exports = {
     "^.+\\.ts$": "ts-jest",
   },
   testMatch: ["<rootDir>/src/**/*.test.{js,ts}"],
-  collectCoverageFrom: [
-    "src/**/*.ts",
-    "!src/index.ts",
-    "!src/CbDefenseClient.ts",
-    "!src/util/axios-util.ts",
-  ],
+  collectCoverage: true,
+  collectCoverageFrom: ["src/**/*.ts"],
   moduleFileExtensions: [...defaults.moduleFileExtensions, "ts"],
   testEnvironment: "node",
   setupFilesAfterEnv: ["./jest.env.js"],
   clearMocks: true,
-  collectCoverage: true,
-  coverageThreshold: {
-    global: {
-      statements: 100,
-      branches: 94.59,
-      functions: 100,
-      lines: 100,
-    },
-  },
 };
