@@ -78,26 +78,33 @@ async function syncDeviceSensors(
       mapSensorToDeviceRelationship(newDeviceSensorEntity),
     );
   });
+
+  const oldDeviceSensorEntities = await graph.findEntitiesByType(
+    DEVICE_SENSOR_ENTITY_TYPE,
+  );
+
   const [
-    oldDeviceSensorEntities,
     oldAccountDeviceSensorRelationships,
     oldMappedDeviceRelationships,
   ] = await Promise.all([
-    graph.findEntitiesByType(DEVICE_SENSOR_ENTITY_TYPE),
     graph.findRelationshipsByType(ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE),
     graph.findRelationshipsByType(SENSOR_DEVICE_RELATIONSHIP_TYPE),
   ]);
+
   return persister.publishPersisterOperations([
-    persister.processEntities(oldDeviceSensorEntities, newDeviceSensorEntities),
+    persister.processEntities({
+      oldEntities: oldDeviceSensorEntities,
+      newEntities: newDeviceSensorEntities,
+    }),
     [
-      ...persister.processRelationships(
-        oldAccountDeviceSensorRelationships,
-        newAccountDeviceSensorRelationships,
-      ),
-      ...persister.processRelationships(
-        oldMappedDeviceRelationships,
-        newMappedDeviceRelationships,
-      ),
+      ...persister.processRelationships({
+        oldRelationships: oldAccountDeviceSensorRelationships,
+        newRelationships: newAccountDeviceSensorRelationships,
+      }),
+      ...persister.processRelationships({
+        oldRelationships: oldMappedDeviceRelationships,
+        newRelationships: newMappedDeviceRelationships,
+      }),
     ],
   ]);
 }
@@ -108,23 +115,33 @@ async function syncAccountAndService(
   newServiceEntity: EntityFromIntegration,
 ): Promise<PersisterOperationsResult> {
   const { graph, persister } = context;
-  const [
-    oldAccountEntities,
-    oldServiceEntities,
-    oldAccountServiceRelationships,
-  ] = await Promise.all([
+
+  const [oldAccountEntities, oldServiceEntities] = await Promise.all([
     graph.findAllEntitiesByType(ACCOUNT_ENTITY_TYPE),
     graph.findEntitiesByType(SERVICE_ENTITY_TYPE),
-    graph.findRelationshipsByType(ACCOUNT_SERVICE_RELATIONSHIP_TYPE),
   ]);
+
+  const oldAccountServiceRelationships = await graph.findRelationshipsByType(
+    ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
+  );
+
   return persister.publishPersisterOperations([
     [
-      ...persister.processEntities(oldAccountEntities, [newAccountEntity]),
-      ...persister.processEntities(oldServiceEntities, [newServiceEntity]),
+      ...persister.processEntities({
+        oldEntities: oldAccountEntities,
+        newEntities: [newAccountEntity],
+      }),
+      ...persister.processEntities({
+        oldEntities: oldServiceEntities,
+        newEntities: [newServiceEntity],
+      }),
     ],
-    persister.processRelationships(oldAccountServiceRelationships, [
-      createAccountServiceRelationship(newAccountEntity, newServiceEntity),
-    ]),
+    persister.processRelationships({
+      oldRelationships: oldAccountServiceRelationships,
+      newRelationships: [
+        createAccountServiceRelationship(newAccountEntity, newServiceEntity),
+      ],
+    }),
   ]);
 }
 
@@ -148,8 +165,14 @@ async function syncAlertFindings(
   }, alertsSinceDate);
 
   return persister.publishPersisterOperations([
-    persister.processEntities([], recentAlertFindingEntities),
-    persister.processRelationships([], deviceSensorAlertFindingRelationships),
+    persister.processEntities({
+      oldEntities: [],
+      newEntities: recentAlertFindingEntities,
+    }),
+    persister.processRelationships({
+      oldRelationships: [],
+      newRelationships: deviceSensorAlertFindingRelationships,
+    }),
   ]);
 }
 
