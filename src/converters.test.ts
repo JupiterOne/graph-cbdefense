@@ -368,7 +368,7 @@ test("createAlertEntity", () => {
     targetValue: "MISSION_CRITICAL",
 
     severity: "Low",
-    alertNumericSeverity: 3,
+    numericSeverity: 3,
     alertSeverity: "Minor",
 
     open: true,

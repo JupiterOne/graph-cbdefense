@@ -151,18 +151,15 @@ export function createAlertFindingEntity(
       source: data,
       assign: {
         ...convertProperties(data),
+        ...convertTimeProperties(data),
         _key: `cb-alert-${data.id}`,
         _type: ALERT_ENTITY_TYPE,
         _class: ALERT_ENTITY_CLASS,
         name: data.threat_id.slice(0, 7),
         createdOn: getTime(data.create_time),
         updatedOn: getTime(data.last_update_time),
-        createTime: getTime(data.create_time),
-        lastUpdateTime: getTime(data.last_update_time),
-        firstEventTime: getTime(data.first_event_time),
-        lastEventTime: getTime(data.last_event_time),
         severity: normalizeSeverity(data.severity)[1],
-        alertNumericSeverity: data.severity,
+        numericSeverity: data.severity,
         alertSeverity: severityString(data.severity),
 
         // When the alert exists, it is considered open
