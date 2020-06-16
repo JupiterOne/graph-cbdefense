@@ -4,7 +4,7 @@ import {
   IntegrationValidationContext,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 import CbDefenseClient from "./CbDefenseClient";
-import { CbDefenseIntegrationConfig } from "./types";
+import { CarbonBlackIntegrationConfig } from "./types";
 
 /**
  * Performs validation of the execution before the execution handler function is
@@ -25,23 +25,23 @@ export default async function invocationValidator(
   context: IntegrationValidationContext,
 ) {
   const { config } = context.instance;
-  const instanceConfig = config as CbDefenseIntegrationConfig;
+  const instanceConfig = config as CarbonBlackIntegrationConfig;
 
   if (!instanceConfig) {
     throw new IntegrationInstanceConfigError("Configuration missing");
   }
 
-  const { site, connectorId, apiKey } = instanceConfig;
+  const { site, orgKey, connectorId, apiKey } = instanceConfig;
 
-  if (!(site && connectorId && apiKey)) {
+  if (!(site && orgKey && connectorId && apiKey)) {
     throw new IntegrationInstanceConfigError(
-      "Configuration requires site, connectorId, and apiKey",
+      "Configuration requires site, orgKey, connectorId, and apiKey",
     );
   }
 
   if (site.match("conferdeploy")) {
     throw new IntegrationInstanceConfigError(
-      "Site is invalid, should be for example `prod05` in `https://defense-prod05.conferdeploy.net/`",
+      "Site is invalid; should be the environment only, not the full dashboard URL. For example, `prod05` in `https://defense-prod05.conferdeploy.net/`",
     );
   }
 

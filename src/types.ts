@@ -1,45 +1,37 @@
 import {
-  EntityFromIntegration,
   GraphClient,
   IntegrationExecutionContext,
-  MappedRelationshipFromIntegration,
   PersisterClient,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 
-import CbDefenseClient, {
-  CbDefensePolicyProperties,
-  CbDefenseSensor,
-} from "./CbDefenseClient";
+import CbDefenseClient from "./CbDefenseClient";
 
 export const PROVIDER_NAME = "carbonblack_psc";
 
 export const ACCOUNT_ENTITY_TYPE = PROVIDER_NAME + "_account";
 export const ACCOUNT_ENTITY_CLASS = "Account";
 
-export const SENSOR_ENTITY_TYPE = "cbdefense_sensor";
-export const SENSOR_ENTITY_CLASS = "HostAgent";
-export const ACCOUNT_SENSOR_RELATIONSHIP_TYPE =
+export const DEVICE_SENSOR_ENTITY_TYPE = "cbdefense_sensor";
+export const DEVICE_SENSOR_ENTITY_CLASS = "HostAgent";
+export const ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE =
   ACCOUNT_ENTITY_TYPE + "_has_sensor";
 
 export const DEVICE_ENTITY_TYPE = "user_endpoint";
 export const DEVICE_ENTITY_CLASS = ["Device", "Host"];
 export const SENSOR_DEVICE_RELATIONSHIP_TYPE =
-  SENSOR_ENTITY_TYPE + "_protects_device";
+  DEVICE_SENSOR_ENTITY_TYPE + "_protects_device";
 
 export const SERVICE_ENTITY_TYPE = "cb_endpoint_protection";
 export const SERVICE_ENTITY_CLASS = "Service";
 export const ACCOUNT_SERVICE_RELATIONSHIP_TYPE =
   ACCOUNT_ENTITY_TYPE + "_has_endpoint_protection_service";
 
-export const POLICY_ENTITY_TYPE = "cb_sensor_policy";
-export const POLICY_ENTITY_CLASS = ["ControlPolicy", "Ruleset"];
-export const SERVICE_POLICY_RELATIONSHIP_TYPE =
-  POLICY_ENTITY_TYPE + "_enforces_endpoint_protection_service";
-export const SENSOR_POLICY_RELATIONSHIP_TYPE =
-  SENSOR_ENTITY_TYPE + "_assigned_policy";
+export const ALERT_ENTITY_TYPE = "cbdefense_alert";
+export const ALERT_ENTITY_CLASS = ["Finding"];
 
-export interface CbDefenseIntegrationConfig {
+export interface CarbonBlackIntegrationConfig {
   site: string;
+  orgKey: string;
   connectorId: string;
   apiKey: string;
 }
@@ -50,26 +42,30 @@ export interface CbDefenseExecutionContext extends IntegrationExecutionContext {
   provider: CbDefenseClient;
 }
 
-export interface CbDefenseAccountEntity extends EntityFromIntegration {
-  accountId: number;
-  name: string;
-  organization: string;
+export enum FindingSeverityNormal {
+  Unknown = -1,
+  Informational = 0,
+  Low = 1,
+  Medium = 2,
+  High = 3,
+  Critical = 4,
 }
 
-export interface CbDefenseServiceEntity extends EntityFromIntegration {
-  displayName: string;
+export enum FindingSeverityNormalName {
+  Unknown = "Unknown",
+  Informational = "Informational",
+  Low = "Low",
+  Medium = "Medium",
+  High = "High",
+  Critical = "Critical",
 }
 
-export interface CbDefenseSensorEntity
-  extends EntityFromIntegration,
-    CbDefenseSensor {
-  hostname: string | undefined;
-  active: boolean;
-  function: string[];
-}
-
-export interface CbDefensePolicyEntity
-  extends EntityFromIntegration,
-    CbDefensePolicyProperties {}
-
-export type AgentDeviceRelationship = MappedRelationshipFromIntegration;
+export const FindingSeverityNormalNames = {
+  [FindingSeverityNormal.Unknown]: FindingSeverityNormalName.Unknown,
+  [FindingSeverityNormal.Informational]:
+    FindingSeverityNormalName.Informational,
+  [FindingSeverityNormal.Low]: FindingSeverityNormalName.Low,
+  [FindingSeverityNormal.Medium]: FindingSeverityNormalName.Medium,
+  [FindingSeverityNormal.High]: FindingSeverityNormalName.High,
+  [FindingSeverityNormal.Critical]: FindingSeverityNormalName.Critical,
+};

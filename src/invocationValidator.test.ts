@@ -5,7 +5,7 @@ import {
 } from "@jupiterone/jupiter-managed-integration-sdk";
 import uuid from "uuid/v4";
 import invocationValidator from "./invocationValidator";
-import { CbDefenseIntegrationConfig } from "./types";
+import { CarbonBlackIntegrationConfig } from "./types";
 
 const mockGetAccountDetails = jest.fn();
 jest.mock("./CbDefenseClient", () => {
@@ -23,7 +23,7 @@ test("should throw error if configuration is not found", async () => {
 });
 
 test("should throw error if site is missing", async () => {
-  const config: Partial<CbDefenseIntegrationConfig> = {
+  const config: Partial<CarbonBlackIntegrationConfig> = {
     connectorId: uuid(),
     apiKey: uuid(),
   };
@@ -40,7 +40,7 @@ test("should throw error if site is missing", async () => {
 });
 
 test("should throw if connectorId is missing", async () => {
-  const config: Partial<CbDefenseIntegrationConfig> = {
+  const config: Partial<CarbonBlackIntegrationConfig> = {
     site: "prod01",
     apiKey: uuid(),
   };
@@ -57,7 +57,7 @@ test("should throw if connectorId is missing", async () => {
 });
 
 test("should throw if api key is missing", async () => {
-  const config: Partial<CbDefenseIntegrationConfig> = {
+  const config: Partial<CarbonBlackIntegrationConfig> = {
     site: "prod01",
     connectorId: uuid(),
   };
@@ -74,8 +74,9 @@ test("should throw if api key is missing", async () => {
 });
 
 test("should throw if site include domain", async () => {
-  const config: CbDefenseIntegrationConfig = {
+  const config: CarbonBlackIntegrationConfig = {
     site: "prod01.conferdeploy.net",
+    orgKey: uuid(),
     connectorId: uuid(),
     apiKey: uuid(),
   };
@@ -92,8 +93,9 @@ test("should throw if site include domain", async () => {
 });
 
 test("authentication failure", async () => {
-  const config: CbDefenseIntegrationConfig = {
+  const config: CarbonBlackIntegrationConfig = {
     site: "prod01",
+    orgKey: uuid(),
     connectorId: uuid(),
     apiKey: uuid(),
   };

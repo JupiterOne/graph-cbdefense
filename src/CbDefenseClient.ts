@@ -1,156 +1,43 @@
+import * as axios from "axios";
+import { Opaque } from "type-fest";
+
 import {
   IntegrationError,
   IntegrationInstanceAuthenticationError,
   IntegrationLogger,
 } from "@jupiterone/jupiter-managed-integration-sdk";
-import * as axios from "axios";
-import { CbDefenseIntegrationConfig } from "./types";
+
+import { CarbonBlackIntegrationConfig } from "./types";
 import * as axiosUtil from "./util/axios-util";
 
-interface Page<T> {
-  latestTime: number;
-  success: boolean;
-  message: string;
-  totalResults: number;
-  elapsed: number;
-  start?: number;
-  rows?: number;
-  results: T[];
-}
-
-export interface CbDefenseAccount {
-  site: string;
-  organizationName: string;
-  organizationId: number;
-  domains?: string[];
-}
-
-export interface CbDefenseSensor {
-  adGroupId: number | null;
-  policyOverride: boolean | null;
-  currentSensorPolicyName: string | null;
-  deviceMetaDataItemList: string[] | null;
-  lastDevicePolicyRequestedTime: number | null;
-  lastDevicePolicyChangedTime: number | null;
-  lastPolicyUpdatedTime: number | null;
-  loginUserName: string | null;
-  activationCode: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  email: string | null;
-  middleName: string | null;
-  deviceId: number | null;
-  deviceType: string | null;
-  deviceOwnerId: number | null;
-  deviceGuid: number | null;
-  deviceSessionId: number | null;
-  assignedToId: number | null;
-  assignedToName: string | null;
-  targetPriorityType: string | null;
-  organizationName: string;
-  organizationId: number;
-  uninstallCode: number | null;
-  createTime: number | null;
-  lastReportedTime: number | null;
-  osVersion: string | null;
-  activationCodeExpiryTime: number | null;
-  sensorVersion: string | null;
-  registeredTime: number | null;
-  lastContact: number | null;
-  windowsPlatform: string | null;
-  vdiBaseDevice: string | null;
-  avStatus: string | null;
-  deregisteredTime: number | null;
-  sensorStates: string[] | null;
-  messages: string[] | null;
-  rootedBySensor: boolean | null;
-  rootedBySensorTime: number | null;
-  quarantined: boolean | null;
-  lastInternalIpAddress: string | null;
-  macAddress: string | null;
-  lastExternalIpAddress: string | null;
-  lastLocation: string | null;
-  sensorOutOfDate: boolean | null;
-  avUpdateServers: string[] | null;
-  passiveMode: boolean | null;
-  lastResetTime: number | null;
-  lastShutdownTime: number | null;
-  scanStatus: string | null;
-  scanLastActionTime: number | null;
-  scanLastCompleteTime: number | null;
-  linuxKernelVersion: number | null;
-  avEngine: string | null;
-  avProductVersion: string | null;
-  avAveVersion: string | null;
-  avPackVersion: string | null;
-  avVdfVersion: string | null;
-  avLastScanTime: number | null;
-  virtualMachine: boolean | null;
-  virtualizationProvider: string | null;
-  firstVirusActivityTime: number | null;
-  lastVirusActivityTime: number | null;
-  rootedByAnalytics: boolean | null;
-  rootedByAnalyticsTime: number | null;
-  testId: number | null;
-  avMaster: boolean | null;
-  encodedActivationCode: number | null;
-  originEventHash: number | null;
-  uninstalledTime: number | null;
-  name: string | null;
-  status: string | null;
-  policyId: number | null;
-  policyName: string | null;
-}
-
-export interface CbDefensePolicy extends CbDefensePolicyProperties {
-  policy: CbDefensePolicySettings;
-}
-
-export interface CbDefensePolicyProperties {
-  id: number;
-  version: number;
-  latestRevision: number;
-  priorityLevel: string;
-  systemPolicy: boolean;
-  name: string;
-  description: string | null;
-}
-
-export interface CbDefensePolicySettings {
-  id: number;
-  avSettings: any;
-  sensorSettings: any;
-  knownBadHashAutoDeleteDelayMs: any;
-  directoryActionRules: any;
-  rules: CbDefensePolicyRule[];
-}
-
-export interface CbDefensePolicyRule {
-  id: number;
-  application: {
-    type: string;
-    value: string;
-  };
-  required: boolean;
-  operation: string;
-  action: string;
-}
+export type CarbonBlackAccount = Opaque<any, "CarbonBlackAccount">;
+export type CarbonBlackDeviceSensor = Opaque<any, "CarbonBlackDeviceSensor">;
+export type CarbonBlackAlert = Opaque<any, "CarbonBlackAlert">;
 
 export default class CbDefenseClient {
-  private axiosInstance: axios.AxiosInstance;
-  private BASE_API_URL: string;
-  private logger: IntegrationLogger;
+  /**
+   * The Carbon Black cloud site, `eap01` in `https://defense-eap01.conferdeploy.net`.
+   */
   private site: string;
 
-  constructor(config: CbDefenseIntegrationConfig, logger: IntegrationLogger) {
+  /**
+   * @see https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#explaining-the-url-parts
+   */
+  private platformBaseUrl: string;
+
+  private axiosInstance: axios.AxiosInstance;
+  private logger: IntegrationLogger;
+
+  constructor(config: CarbonBlackIntegrationConfig, logger: IntegrationLogger) {
     this.site = config.site;
-    this.BASE_API_URL = `https://api-${
+
+    this.platformBaseUrl = `https://defense-${
       this.site
-    }.conferdeploy.net/integrationServices/v3`;
+    }.conferdeploy.net/appservices/v6/orgs/${config.orgKey}`;
+
     this.logger = logger;
     this.axiosInstance = axiosUtil.createInstance(
       {
-        baseURL: this.BASE_API_URL,
         headers: {
           "X-Auth-Token": `${config.apiKey}/${config.connectorId}`,
         },
@@ -159,24 +46,26 @@ export default class CbDefenseClient {
     );
   }
 
-  public async getAccountDetails(): Promise<CbDefenseAccount> {
-    this.logger.trace("Fetching a single Cb Defense device sensor agent...");
+  public async getAccountDetails(): Promise<CarbonBlackAccount> {
     try {
-      const devices = await this.collectOnePage<CbDefenseSensor>(
-        "device",
-        "start=1&rows=1",
+      const response = await this.axiosInstance.post(
+        `${this.platformBaseUrl}/devices/_search`,
+        {
+          rows: 1,
+          start: 0,
+        },
       );
-      this.logger.trace({}, "Fetched one device sensor agent");
 
+      const devices = response.data.results;
       if (devices && devices.length > 0) {
         return {
           site: this.site,
-          organizationName: devices[0].organizationName as string,
-          organizationId: devices[0].organizationId,
+          organization_name: devices[0].organization_name as string,
+          organization_id: devices[0].organization_id,
         };
       } else {
         throw new IntegrationError(
-          "Unable to retrieve Cb Defense account details, no device sensor found",
+          "Unable to retrieve account details, no device sensor found",
         );
       }
     } catch (err) {
@@ -185,69 +74,81 @@ export default class CbDefenseClient {
       } else {
         throw new IntegrationError({
           cause: err,
-          message: "Unable to retrieve Cb Defense account details",
+          message: "Unable to retrieve account details",
         });
       }
     }
   }
 
-  public async getSensorAgents(): Promise<CbDefenseSensor[]> {
-    this.logger.trace("Fetching Cb Defense device sensor agents...");
-    const result = await this.collectAllPages<CbDefenseSensor>("device");
-    this.logger.trace({}, "Fetched device sensor agents");
-    return result;
+  public async iterateDevices(
+    callback: (agent: CarbonBlackDeviceSensor) => void,
+  ): Promise<void> {
+    return this.iterateResults({ platformPath: "/devices/_search", callback });
   }
 
-  public async getPolicies(): Promise<CbDefensePolicy[]> {
-    this.logger.trace("Fetching Cb Defense policies...");
-    const result = await this.collectAllPages<CbDefensePolicy>("policy");
-    this.logger.trace({}, "Fetched policies");
-    return result;
-  }
-
-  private async forEachPage<T>(
-    firstUri: string,
-    eachFn: (page: Page<T>) => void,
-  ) {
-    let nextPageUrl: string | null = `${this.BASE_API_URL}/${firstUri}`;
-
-    while (nextPageUrl) {
-      const response = await this.axiosInstance.get<Page<T>>(nextPageUrl);
-
-      const page: any = response.data;
-
-      eachFn(page);
-
-      if (page.start && page.rows) {
-        if (page.totalResults < page.start + page.rows) {
-          nextPageUrl = `${this.BASE_API_URL}/${firstUri}?start=${page.start +
-            page.rows +
-            1}&rows=${page.rows}`;
-        } else {
-          nextPageUrl = null;
-        }
-      } else {
-        nextPageUrl = null;
-      }
-    }
-  }
-
-  private async collectAllPages<T>(firstUri: string): Promise<T[]> {
-    const results: T[] = [];
-
-    await this.forEachPage<T>(firstUri, (page: Page<T>) => {
-      for (const item of page.results) {
-        results.push(item);
-      }
+  public async iterateAlerts(
+    callback: (alert: CarbonBlackAlert) => void,
+    alertsSince: Date,
+  ): Promise<void> {
+    return this.iterateResults({
+      platformPath: "/alerts/_search",
+      criteria: {
+        create_time: {
+          start: alertsSince.toISOString(),
+          end: new Date().toISOString(),
+        },
+      },
+      callback,
     });
-
-    return results;
   }
 
-  private async collectOnePage<T>(uri: string, params: string): Promise<T[]> {
-    const url = `${this.BASE_API_URL}/${uri}?${params}`;
-    const response = await this.axiosInstance.get<Page<T>>(url);
-    const page: any = response.data;
-    return page.results;
+  private async iterateResults<T>({
+    platformPath,
+    criteria,
+    callback,
+  }: {
+    platformPath: string;
+    criteria?: {
+      create_time: {
+        start: string;
+        end: string;
+      };
+    };
+    callback: (agent: T) => void;
+  }): Promise<void> {
+    const platformUrl = `${this.platformBaseUrl}${platformPath}`;
+    const rows = 200;
+
+    let pagesProcessed = 0;
+    let rowsProcessed = 0;
+    let finished = false;
+
+    while (!finished) {
+      const start = rowsProcessed;
+
+      const response = await this.axiosInstance.post(platformUrl, {
+        rows,
+        start,
+        criteria,
+      });
+      const results = response.data.results;
+
+      pagesProcessed++;
+      rowsProcessed += results.length;
+      finished = response.data.num_found <= rowsProcessed;
+
+      this.logger.info(
+        {
+          found: response.data.num_found,
+          rowsProcessed,
+          rowsTotal: rowsProcessed,
+          pagesProcessed,
+          finished,
+        },
+        `Fetched page for ${platformUrl}`,
+      );
+
+      results.forEach(callback);
+    }
   }
 }

@@ -1,150 +1,189 @@
 import {
+  EntityFromIntegration,
   IntegrationExecutionContext,
   IntegrationExecutionResult,
+  IntegrationRelationship,
+  IntegrationServiceClient,
+  MappedRelationshipFromIntegration,
+  PersisterOperationsResult,
+  summarizePersisterOperationsResults,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 
-import CbDefenseClient from "./CbDefenseClient";
 import {
+  createAccountDeviceSensorRelationship,
   createAccountEntity,
-  createAccountRelationships,
-  createPolicyEntities,
-  createSensorEntities,
-  createSensorPolicyRelationships,
+  createAccountServiceRelationship,
+  createAlertFindingEntity,
+  createDeviceSensorAlertFindingRelationship,
+  createDeviceSensorEntity,
   createServiceEntity,
-  createServicePolicyRelationships,
   mapSensorToDeviceRelationship,
 } from "./converters";
 import initializeContext from "./initializeContext";
 import {
+  ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
   ACCOUNT_ENTITY_TYPE,
-  ACCOUNT_SENSOR_RELATIONSHIP_TYPE,
   ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
-  CbDefenseAccountEntity,
-  CbDefensePolicyEntity,
-  CbDefenseSensorEntity,
-  CbDefenseServiceEntity,
-  POLICY_ENTITY_TYPE,
+  CbDefenseExecutionContext,
+  DEVICE_SENSOR_ENTITY_TYPE,
   SENSOR_DEVICE_RELATIONSHIP_TYPE,
-  SENSOR_ENTITY_TYPE,
-  SENSOR_POLICY_RELATIONSHIP_TYPE,
   SERVICE_ENTITY_TYPE,
-  SERVICE_POLICY_RELATIONSHIP_TYPE,
 } from "./types";
 
 export default async function executionHandler(
   context: IntegrationExecutionContext,
 ): Promise<IntegrationExecutionResult> {
-  const { graph, persister, provider } = initializeContext(context);
+  const cbContext = initializeContext(context);
+  const { provider } = cbContext;
 
-  const [
-    oldAccountEntities,
-    oldSensorEntities,
-    oldServiceEntities,
-    oldPolicyEntities,
-    oldAccountSensorRelationships,
-    oldAccountServiceRelationships,
-    oldServicePolicyRelationships,
-    oldSensorPolicyRelationships,
-    oldMappedDeviceRelationships,
-  ] = await Promise.all([
-    graph.findAllEntitiesByType<CbDefenseAccountEntity>(ACCOUNT_ENTITY_TYPE),
-    graph.findEntitiesByType<CbDefenseSensorEntity>(SENSOR_ENTITY_TYPE),
-    graph.findEntitiesByType<CbDefenseServiceEntity>(SERVICE_ENTITY_TYPE),
-    graph.findEntitiesByType<CbDefensePolicyEntity>(POLICY_ENTITY_TYPE),
-    graph.findRelationshipsByType(ACCOUNT_SENSOR_RELATIONSHIP_TYPE),
-    graph.findRelationshipsByType(ACCOUNT_SERVICE_RELATIONSHIP_TYPE),
-    graph.findRelationshipsByType(SERVICE_POLICY_RELATIONSHIP_TYPE),
-    graph.findRelationshipsByType(SENSOR_POLICY_RELATIONSHIP_TYPE),
-    graph.findRelationshipsByType(SENSOR_DEVICE_RELATIONSHIP_TYPE),
-  ]);
+  const results: PersisterOperationsResult[] = [];
 
-  const [
-    newAccountEntities,
-    newSensorEntities,
-    newPolicyEntities,
-  ] = await Promise.all([
-    fetchAccountEntitiesFromProvider(provider),
-    fetchSensorEntitiesFromProvider(provider),
-    fetchPolicyEntitiesFromProvider(provider),
-  ]);
-
-  const [accountEntity] = newAccountEntities;
-  const serviceEntity = createServiceEntity(accountEntity.accountId);
-  const newServiceEntities = [serviceEntity];
-
-  const newAccountServiceRelationships = createAccountRelationships(
-    accountEntity,
-    newServiceEntities,
-    ACCOUNT_SENSOR_RELATIONSHIP_TYPE,
-  );
-  const newAccountSensorRelationships = createAccountRelationships(
-    accountEntity,
-    newSensorEntities,
-    ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
+  const accountData = await provider.getAccountDetails();
+  const newAccountEntity = createAccountEntity(accountData);
+  const newServiceEntity = createServiceEntity(
+    accountData.site,
+    accountData.organization_id,
   );
 
-  const newMappedDeviceRelationships = [];
-  for (const e of newSensorEntities) {
-    newMappedDeviceRelationships.push(mapSensorToDeviceRelationship(e));
-  }
-
-  const newServicePolicyRelationships = createServicePolicyRelationships(
-    serviceEntity,
-    newPolicyEntities,
+  results.push(
+    await syncAccountAndService(cbContext, newAccountEntity, newServiceEntity),
   );
-
-  const newSensorPolicyRelationships = createSensorPolicyRelationships(
-    newSensorEntities,
-  );
+  results.push(await syncDeviceSensors(cbContext, newAccountEntity));
+  results.push(await syncAlertFindings(cbContext));
 
   return {
-    operations: await persister.publishPersisterOperations([
-      [
-        ...persister.processEntities(oldAccountEntities, newAccountEntities),
-        ...persister.processEntities(oldSensorEntities, newSensorEntities),
-        ...persister.processEntities(oldServiceEntities, newServiceEntities),
-        ...persister.processEntities(oldPolicyEntities, newPolicyEntities),
-      ],
-      [
-        ...persister.processRelationships(
-          oldAccountServiceRelationships,
-          newAccountServiceRelationships,
-        ),
-        ...persister.processRelationships(
-          oldAccountSensorRelationships,
-          newAccountSensorRelationships,
-        ),
-        ...persister.processRelationships(
-          oldSensorPolicyRelationships,
-          newSensorPolicyRelationships,
-        ),
-        ...persister.processRelationships(
-          oldServicePolicyRelationships,
-          newServicePolicyRelationships,
-        ),
-        ...persister.processRelationships(
-          oldMappedDeviceRelationships,
-          newMappedDeviceRelationships,
-        ),
-      ],
-    ]),
+    operations: summarizePersisterOperationsResults(...results),
   };
 }
 
-async function fetchAccountEntitiesFromProvider(
-  provider: CbDefenseClient,
-): Promise<CbDefenseAccountEntity[]> {
-  return [createAccountEntity(await provider.getAccountDetails())];
+async function syncDeviceSensors(
+  context: CbDefenseExecutionContext,
+  newAccountEntity: EntityFromIntegration,
+): Promise<PersisterOperationsResult> {
+  const { provider, graph, persister } = context;
+
+  const newDeviceSensorEntities: EntityFromIntegration[] = [];
+  const newAccountDeviceSensorRelationships: IntegrationRelationship[] = [];
+  const newMappedDeviceRelationships: MappedRelationshipFromIntegration[] = [];
+  await provider.iterateDevices(device => {
+    const newDeviceSensorEntity = createDeviceSensorEntity(device);
+    newDeviceSensorEntities.push(newDeviceSensorEntity);
+    newAccountDeviceSensorRelationships.push(
+      createAccountDeviceSensorRelationship(
+        newAccountEntity,
+        newDeviceSensorEntity,
+      ),
+    );
+    newMappedDeviceRelationships.push(
+      mapSensorToDeviceRelationship(newDeviceSensorEntity),
+    );
+  });
+
+  const oldDeviceSensorEntities = await graph.findEntitiesByType(
+    DEVICE_SENSOR_ENTITY_TYPE,
+  );
+
+  const [
+    oldAccountDeviceSensorRelationships,
+    oldMappedDeviceRelationships,
+  ] = await Promise.all([
+    graph.findRelationshipsByType(ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE),
+    graph.findRelationshipsByType(SENSOR_DEVICE_RELATIONSHIP_TYPE),
+  ]);
+
+  return persister.publishPersisterOperations([
+    persister.processEntities({
+      oldEntities: oldDeviceSensorEntities,
+      newEntities: newDeviceSensorEntities,
+    }),
+    [
+      ...persister.processRelationships({
+        oldRelationships: oldAccountDeviceSensorRelationships,
+        newRelationships: newAccountDeviceSensorRelationships,
+      }),
+      ...persister.processRelationships({
+        oldRelationships: oldMappedDeviceRelationships,
+        newRelationships: newMappedDeviceRelationships,
+      }),
+    ],
+  ]);
 }
 
-async function fetchSensorEntitiesFromProvider(
-  provider: CbDefenseClient,
-): Promise<CbDefenseSensorEntity[]> {
-  return createSensorEntities(await provider.getSensorAgents());
+async function syncAccountAndService(
+  context: CbDefenseExecutionContext,
+  newAccountEntity: EntityFromIntegration,
+  newServiceEntity: EntityFromIntegration,
+): Promise<PersisterOperationsResult> {
+  const { graph, persister } = context;
+
+  const [oldAccountEntities, oldServiceEntities] = await Promise.all([
+    graph.findAllEntitiesByType(ACCOUNT_ENTITY_TYPE),
+    graph.findEntitiesByType(SERVICE_ENTITY_TYPE),
+  ]);
+
+  const oldAccountServiceRelationships = await graph.findRelationshipsByType(
+    ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
+  );
+
+  return persister.publishPersisterOperations([
+    [
+      ...persister.processEntities({
+        oldEntities: oldAccountEntities,
+        newEntities: [newAccountEntity],
+      }),
+      ...persister.processEntities({
+        oldEntities: oldServiceEntities,
+        newEntities: [newServiceEntity],
+      }),
+    ],
+    persister.processRelationships({
+      oldRelationships: oldAccountServiceRelationships,
+      newRelationships: [
+        createAccountServiceRelationship(newAccountEntity, newServiceEntity),
+      ],
+    }),
+  ]);
 }
 
-async function fetchPolicyEntitiesFromProvider(
-  provider: CbDefenseClient,
-): Promise<CbDefensePolicyEntity[]> {
-  return createPolicyEntities(await provider.getPolicies());
+async function syncAlertFindings(
+  context: CbDefenseExecutionContext,
+): Promise<PersisterOperationsResult> {
+  const { provider, persister } = context;
+
+  const alertsSinceDate = await determineAlertsSinceDate(
+    context.clients.getClients().integrationService,
+  );
+
+  const recentAlertFindingEntities: EntityFromIntegration[] = [];
+  const deviceSensorAlertFindingRelationships: IntegrationRelationship[] = [];
+  await provider.iterateAlerts(alert => {
+    const newFindingEntity = createAlertFindingEntity(alert);
+    recentAlertFindingEntities.push(newFindingEntity);
+    deviceSensorAlertFindingRelationships.push(
+      createDeviceSensorAlertFindingRelationship(newFindingEntity),
+    );
+  }, alertsSinceDate);
+
+  return persister.publishPersisterOperations([
+    persister.processEntities({
+      oldEntities: [],
+      newEntities: recentAlertFindingEntities,
+    }),
+    persister.processRelationships({
+      oldRelationships: [],
+      newRelationships: deviceSensorAlertFindingRelationships,
+    }),
+  ]);
+}
+
+async function determineAlertsSinceDate(
+  integrationService: IntegrationServiceClient,
+): Promise<Date> {
+  const lastSuccessStartTime = await integrationService.lastSuccessfulSynchronizationTime();
+  if (lastSuccessStartTime) {
+    return new Date(lastSuccessStartTime);
+  } else {
+    const fiveDaysMs = 1000 * 60 * 60 * 24 * 5;
+    return new Date(Date.now() - fiveDaysMs);
+  }
 }
