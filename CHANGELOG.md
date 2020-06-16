@@ -15,7 +15,10 @@ and this project adheres to
 
 ### Changed
 
-- Using V6 platform API and RBAC API tokens to support Alert ingestion. This led
-  to the loss of `Policy` ingestion for this release.
-
-- `orgKey` is now a required instance config field for the V6 platform API.
+- Now using Devices API V6 and Alerts API V6. This led to the loss of `Policy`
+  ingestion for this release.
+- Authentication must be reconfigured in the Carbon Black Cloud Console to
+  provide an API Key and API ID (formerly Connector ID), associated with a
+  custom read-only Access Level.
+- `orgKey` is now a required instance config field to support the use of the
+  latest platform APIs.
