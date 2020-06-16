@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 1.0.2 - 2020-06-16
+
 ### Fixed
 
 - Alerts could be skipped because the last job may have failed, so that when the
