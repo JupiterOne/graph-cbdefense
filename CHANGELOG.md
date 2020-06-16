@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 1.0.0 - 2020-06-15
+
 ### Added
 
 - Alerts are ingested as `Finding` entities, the last 5 days or since last
