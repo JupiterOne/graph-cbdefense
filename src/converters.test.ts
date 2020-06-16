@@ -310,7 +310,7 @@ test("mapSensorToDeviceRelationship", () => {
   });
 });
 
-test("createAlertEntity", () => {
+describe("createAlertFindingEntity", () => {
   const data = {
     id: "038894832709076d63111e99466f73575fcf3ca",
     legacy_alert_id: "1DDU8H9N",
@@ -330,51 +330,72 @@ test("createAlertEntity", () => {
     policy_id: 1,
     policy_name: "default",
     target_value: "MISSION_CRITICAL",
+    process_name: "79d521e0e9c776f6e0b43b9cd2adea3c-down.sh",
+    reason:
+      "The application Google Chrome invoked another application (Google Chrome Helper (Renderer)).",
+    reason_code: "R_BOX_WEB_RUN",
+    threat_cause_vector: "UNKNOWN",
   };
 
-  expect(createAlertFindingEntity(data)).toEqual({
-    _rawData: [
-      {
-        name: "default",
-        rawData: data,
-      },
-    ],
+  test("properties transferred", () => {
+    expect(createAlertFindingEntity(data)).toEqual({
+      _rawData: [
+        {
+          name: "default",
+          rawData: data,
+        },
+      ],
 
-    _key: "cb-alert-038894832709076d63111e99466f73575fcf3ca",
-    _type: ALERT_ENTITY_TYPE,
-    _class: ALERT_ENTITY_CLASS,
+      _key: "cb-alert-038894832709076d63111e99466f73575fcf3ca",
+      _type: ALERT_ENTITY_TYPE,
+      _class: ALERT_ENTITY_CLASS,
 
-    name: "b7ce4f7",
-    displayName: "b7ce4f7",
-    createTime: 1568384241668,
-    lastUpdateTime: 1568384241668,
-    createdOn: 1568384241668,
-    updatedOn: 1568384241668,
-    firstEventTime: 1568384215878,
-    lastEventTime: 1568384215878,
+      name: "038894832709076d63111e99466f73575fcf3ca",
+      displayName:
+        "79d521e0e9c776f6e0b43b9cd2adea3c-down.sh : R_BOX_WEB_RUN : UNKNOWN",
+      createTime: 1568384241668,
+      lastUpdateTime: 1568384241668,
+      createdOn: 1568384241668,
+      updatedOn: 1568384241668,
+      firstEventTime: 1568384215878,
+      lastEventTime: 1568384215878,
 
-    id: "038894832709076d63111e99466f73575fcf3ca",
-    legacyAlertId: "1DDU8H9N",
-    orgKey: "ASDF1234",
-    threatId: "b7ce4f79e8903c09d2cd6b615c965c9f",
-    category: "MONITORED",
-    deviceId: 123,
-    deviceOs: "MAC",
-    deviceOsVersion: "<OS Version>",
-    deviceName: "<System-Name>",
-    deviceUsername: "support@carbonblack.com",
-    policyId: 1,
-    policyName: "default",
-    targetValue: "MISSION_CRITICAL",
+      id: "038894832709076d63111e99466f73575fcf3ca",
+      legacyAlertId: "1DDU8H9N",
+      orgKey: "ASDF1234",
+      threatId: "b7ce4f79e8903c09d2cd6b615c965c9f",
+      category: "MONITORED",
+      deviceId: 123,
+      deviceOs: "MAC",
+      deviceOsVersion: "<OS Version>",
+      deviceName: "<System-Name>",
+      deviceUsername: "support@carbonblack.com",
+      policyId: 1,
+      policyName: "default",
+      targetValue: "MISSION_CRITICAL",
+      processName: "79d521e0e9c776f6e0b43b9cd2adea3c-down.sh",
+      reason:
+        "The application Google Chrome invoked another application (Google Chrome Helper (Renderer)).",
+      reasonCode: "R_BOX_WEB_RUN",
+      threatCauseVector: "UNKNOWN",
 
-    severity: "Low",
-    numericSeverity: 3,
-    alertSeverity: "Minor",
+      description:
+        "The application Google Chrome invoked another application (Google Chrome Helper (Renderer)).",
 
-    open: true,
+      severity: "Low",
+      numericSeverity: 3,
+      alertSeverity: "Minor",
 
-    production: true,
-    public: true,
+      open: true,
+    });
+  });
+
+  test("displayName when missing any component property", () => {
+    expect(
+      createAlertFindingEntity({ ...data, process_name: undefined }),
+    ).toMatchObject({
+      displayName: "038894832709076d63111e99466f73575fcf3ca",
+    });
   });
 });
 

@@ -8,6 +8,18 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Alert `Finding.description` is set from the `reason` to improve display in
+  JupiterOne alerts views.
+
+### Changed
+
+- Alert `Finding.name` is now the alert `id` value.
+- Alert `Finding.displayName` includes a few properties combined to make a more
+  descriptive value, falling back on the alert `id` instead of a short version
+  of the `threat_id`.
+
 ## 1.0.0 - 2020-06-15
 
 ### Added
