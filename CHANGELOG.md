@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 1.0.1 - 2020-06-16
+
 ### Added
 
 - Alert `Finding.description` is set from the `reason` to improve display in
