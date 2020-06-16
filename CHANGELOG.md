@@ -8,6 +8,13 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 1.0.2 - 2020-06-16
+
+### Fixed
+
+- Alerts could be skipped because the last job may have failed, so that when the
+  current job runs, it did not search alerts to the last successful ingestion.
+
 ## 1.0.1 - 2020-06-16
 
 ### Added
