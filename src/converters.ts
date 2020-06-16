@@ -155,23 +155,32 @@ export function createAlertFindingEntity(
         _key: `cb-alert-${data.id}`,
         _type: ALERT_ENTITY_TYPE,
         _class: ALERT_ENTITY_CLASS,
-        name: data.threat_id.slice(0, 7),
+        name: data.id,
+        displayName: alertFindingDisplayName(data),
         createdOn: getTime(data.create_time),
         updatedOn: getTime(data.last_update_time),
         severity: normalizeSeverity(data.severity)[1],
         numericSeverity: data.severity,
         alertSeverity: severityString(data.severity),
+        description: data.reason,
 
         // When the alert exists, it is considered open
         open: true,
-
-        // TODO update integration SDK to latest data-model, which removes these
-        // as required properties
-        production: true,
-        public: true,
       },
     },
   }) as AlertFindingEntity;
+}
+
+function alertFindingDisplayName(data: CarbonBlackAlert): string {
+  const components = [
+    data.process_name,
+    data.reason_code,
+    data.threat_cause_vector,
+  ].filter(e => !!e);
+  if (components.length !== 3) {
+    return data.id;
+  }
+  return components.join(" : ");
 }
 
 /**
@@ -266,9 +275,7 @@ export function mapSensorToDeviceRelationship(
     : [["_type", "hostname", "owner"]];
 
   const platform =
-    sensor.os && sensor.os.match(/mac/i)
-      ? "darwin"
-      : sensor.os.toLowerCase();
+    sensor.os && sensor.os.match(/mac/i) ? "darwin" : sensor.os.toLowerCase();
   const osDetails = sensor.osVersion;
 
   const osPatternRegex = /^(mac os x|\w+)\s([0-9.]+)\s?(\w+)?$/i;
