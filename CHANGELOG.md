@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 1.0.3 - 2021-02-15
+
+- Remove spaces and new lines in the `email` values on the sensor entity.
+
 ## 1.0.2 - 2020-06-16
 
 ### Fixed
