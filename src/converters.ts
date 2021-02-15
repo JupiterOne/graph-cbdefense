@@ -134,6 +134,7 @@ export function createDeviceSensorEntity(
         function: ["anti-malware", "activity-monitor"],
         macAddress: formatMacAddress(data.mac_address),
         lastSeenOn: getTime(data.last_contact_time),
+        email: data.email?.replace(/\r?\n|\r|\s/g, ''),
       },
     },
   }) as DeviceSensorEntity;
