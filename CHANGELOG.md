@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Removed `activationCode` from sensor entities and redacted in `_rawData`
+
 ## 1.0.2 - 2020-06-16
 
 ### Fixed

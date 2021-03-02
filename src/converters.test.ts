@@ -180,6 +180,9 @@ describe("createDeviceEntity", () => {
 
   test("properties transferred", () => {
     expect(createDeviceSensorEntity(data)).toMatchObject({
+      _rawData: [
+        { name: "default", rawData: { ...data, activation_code: "REDACTED" } },
+      ],
       _class: [DEVICE_SENSOR_ENTITY_CLASS],
       _key: "cbdefense-sensor-7891906",
       _type: DEVICE_SENSOR_ENTITY_TYPE,
@@ -189,6 +192,7 @@ describe("createDeviceEntity", () => {
       function: ["anti-malware", "activity-monitor"],
       macAddress: "88:e9:fe:4c:69:3b",
 
+      activationCode: "REDACTED",
       activationCodeExpiryTime: 1553720226089,
       avLastScanTime: 1592062215355,
       deregisteredTime: 1592062215355,
