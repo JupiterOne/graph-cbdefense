@@ -115,25 +115,30 @@ function convertTimeProperties(data: any): object {
 export function createDeviceSensorEntity(
   data: CarbonBlackDeviceSensor,
 ): DeviceSensorEntity {
+  let source = data;
+  if (source.activation_code) {
+    source = { ...source, activation_code: "REDACTED" };
+  }
+
   return createIntegrationEntity({
     entityData: {
-      source: data,
+      source,
       assign: {
-        ...convertProperties(data),
-        ...convertTimeProperties(data),
-        _key: deviceSensorKey(data.id),
+        ...convertProperties(source),
+        ...convertTimeProperties(source),
+        _key: deviceSensorKey(source.id),
         _class: DEVICE_SENSOR_ENTITY_CLASS,
         _type: DEVICE_SENSOR_ENTITY_TYPE,
-        id: String(data.id),
-        name: data.name || "cbdefense-sensor",
-        hostname: normalizeHostname(data.name),
+        id: String(source.id),
+        name: source.name || "cbdefense-sensor",
+        hostname: normalizeHostname(source.name),
         active:
-          data.status !== "INACTIVE" &&
-          data.sensor_states != null &&
-          data.sensor_states.indexOf("ACTIVE") >= 0,
+          source.status !== "INACTIVE" &&
+          source.sensor_states != null &&
+          source.sensor_states.indexOf("ACTIVE") >= 0,
         function: ["anti-malware", "activity-monitor"],
-        macAddress: formatMacAddress(data.mac_address),
-        lastSeenOn: getTime(data.last_contact_time),
+        macAddress: formatMacAddress(source.mac_address),
+        lastSeenOn: getTime(source.last_contact_time),
       },
     },
   }) as DeviceSensorEntity;
