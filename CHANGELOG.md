@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 1.2.0
+
 ### Changed
 
 - Redacted `encoded_activation_code`, `uninstall_code`
