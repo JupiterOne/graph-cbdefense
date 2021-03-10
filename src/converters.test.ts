@@ -179,9 +179,18 @@ describe("createDeviceEntity", () => {
   };
 
   test("properties transferred", () => {
-    expect(createDeviceSensorEntity(data)).toMatchObject({
+    const entity = createDeviceSensorEntity(data);
+    expect(entity).toMatchObject({
       _rawData: [
-        { name: "default", rawData: { ...data, activation_code: "REDACTED" } },
+        {
+          name: "default",
+          rawData: {
+            ...data,
+            activation_code: "REDACTED",
+            encoded_activation_code: "REDACTED",
+            uninstall_code: "REDACTED",
+          },
+        },
       ],
       _class: [DEVICE_SENSOR_ENTITY_CLASS],
       _key: "cbdefense-sensor-7891906",
@@ -192,7 +201,6 @@ describe("createDeviceEntity", () => {
       function: ["anti-malware", "activity-monitor"],
       macAddress: "88:e9:fe:4c:69:3b",
 
-      activationCode: "REDACTED",
       activationCodeExpiryTime: 1553720226089,
       avLastScanTime: 1592062215355,
       deregisteredTime: 1592062215355,
@@ -208,6 +216,10 @@ describe("createDeviceEntity", () => {
       scanLastCompleteTime: 1592062215355,
 
       lastSeenOn: 1592085700367,
+
+      activationCode: null,
+      encodedActivationCode: null,
+      uninstallCode: null,
     });
   });
 

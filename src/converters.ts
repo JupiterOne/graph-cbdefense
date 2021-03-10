@@ -112,13 +112,17 @@ function convertTimeProperties(data: any): object {
   return timeProperties;
 }
 
+const REDACTED = "REDACTED";
+
 export function createDeviceSensorEntity(
   data: CarbonBlackDeviceSensor,
 ): DeviceSensorEntity {
-  let source = data;
-  if (source.activation_code) {
-    source = { ...source, activation_code: "REDACTED" };
-  }
+  const source = {
+    ...data,
+    activation_code: REDACTED,
+    encoded_activation_code: REDACTED,
+    uninstall_code: REDACTED,
+  };
 
   return createIntegrationEntity({
     entityData: {
@@ -139,6 +143,11 @@ export function createDeviceSensorEntity(
         function: ["anti-malware", "activity-monitor"],
         macAddress: formatMacAddress(source.mac_address),
         lastSeenOn: getTime(source.last_contact_time),
+
+        // Remove codes
+        activationCode: null,
+        encodedActivationCode: null,
+        uninstallCode: null,
       },
     },
   }) as DeviceSensorEntity;
