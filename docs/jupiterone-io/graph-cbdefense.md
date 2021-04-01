@@ -8,6 +8,27 @@ directly to Carbon Black APIs to obtain details about device sensors/agents and
 active alerts. Customers authorize access by creating a Connector and an API Key
 in their target PSC account and providing that credential to JupiterOne.
 
+## Carbon Black Cloud + JupiterOne Integration Benefits
+
+- Visualize Carbon Black endpoint agents and findings on corresponding devices
+  in the JupiterOne graph.
+- Map Carbon Black endpoint agents to devices and devices to the employee who is
+  the owner.  
+- Monitor Carbon Black findings within the alerts app.
+- Monitor changes to Carbon Black endpoints using JupiterOne alerts.
+
+## How it Works
+
+- JupiterOne periodically fetches new findings from Bugcrowd to update the
+  graph.
+- Configure alerts to reduce the noise of findings.
+
+## Requirements
+
+- JupiterOne requires the deployment site and org key of your account as well as
+  a configured API key and id with the proper permissions. 
+- You must have permission in JupiterOne to install new integrations.
+
 ## Integration Instance Configuration
 
 You must [set up an Access Level and API Key][1] in the Carbon Black Cloud
@@ -47,10 +68,10 @@ The following relationships are created/mapped:
 
 | Relationships                                              |
 | ---------------------------------------------------------- |
-| `carbonblack_psc_account` **HAS** `cbdefense_sensor`       |
-| `carbonblack_psc_account` **HAS** `cb_endpoint_protection` |
-| `cbdefense_sensor` **ASSIGNED** `cb_sensor_policy`         |
-| `cbdefense_sensor` **IDENTIFIED** `cbdefense_alert`        |
+| `carbonblack_psc_account` **HAS** `cbdefense_sensor`       | |
+`carbonblack_psc_account` **HAS** `cb_endpoint_protection` | |
+`cbdefense_sensor` **ASSIGNED** `cb_sensor_policy`         | |
+`cbdefense_sensor` **IDENTIFIED** `cbdefense_alert`        |
 
 [1]:
   https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/
