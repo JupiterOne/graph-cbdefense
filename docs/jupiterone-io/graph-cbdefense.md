@@ -1,4 +1,4 @@
-# Carbon Black PSC
+# Integration with JupiterOne
 
 ## Carbon Black Cloud + JupiterOne Integration Benefits
 
