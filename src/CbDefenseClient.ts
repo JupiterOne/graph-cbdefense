@@ -79,23 +79,58 @@ export default class CbDefenseClient {
   public async iterateDevices(
     callback: (agent: CarbonBlackDeviceSensor) => void,
   ): Promise<void> {
-    return this.iterateResults({ platformPath: "/devices/_search", callback });
+    try {
+      return this.iterateResults({
+        platformPath: "/devices/_search",
+        callback,
+      });
+    } catch (err) {
+      this.logger.warn(
+        {
+          err,
+        },
+        "Encounted error retrieving devices",
+      );
+      // CB API seems returns 500 errors for empty results
+      if (err.status !== 500) {
+        throw new IntegrationError({
+          cause: err,
+          message: "Unable to retrieve devices",
+        });
+      }
+    }
   }
 
   public async iterateAlerts(
     callback: (alert: CarbonBlackAlert) => void,
     alertsSince: Date,
   ): Promise<void> {
-    return this.iterateResults({
-      platformPath: "/alerts/_search",
-      criteria: {
-        create_time: {
-          start: alertsSince.toISOString(),
-          end: new Date().toISOString(),
+    try {
+      return this.iterateResults({
+        platformPath: "/alerts/_search",
+        criteria: {
+          create_time: {
+            start: alertsSince.toISOString(),
+            end: new Date().toISOString(),
+          },
         },
-      },
-      callback,
-    });
+        callback,
+      });
+    } catch (err) {
+      this.logger.warn(
+        {
+          err,
+        },
+        "Encounted error retrieving alerts",
+      );
+      // CB API seems returns 500 errors for empty results
+      if (err.status !== 500) {
+        throw new IntegrationError({
+          cause: err,
+          message: "Unable to retrieve alerts",
+        });
+      }
+    }
   }
 
   private async iterateResults<T>({

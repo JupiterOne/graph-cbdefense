@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Log 500 errors for alerts/devices instead of failing execution.
+
 ## 1.2.0
 
 ### Changed
