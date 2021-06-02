@@ -1,4 +1,4 @@
-import * as axios from "axios";
+import Axios, * as axios from "axios";
 import { Opaque } from "type-fest";
 
 import {
@@ -8,7 +8,6 @@ import {
 } from "@jupiterone/jupiter-managed-integration-sdk";
 
 import { CarbonBlackIntegrationConfig } from "./types";
-import * as axiosUtil from "./util/axios-util";
 
 export type CarbonBlackAccount = Opaque<any, "CarbonBlackAccount">;
 export type CarbonBlackDeviceSensor = Opaque<any, "CarbonBlackDeviceSensor">;
@@ -36,14 +35,11 @@ export default class CbDefenseClient {
     }.conferdeploy.net/appservices/v6/orgs/${config.orgKey}`;
 
     this.logger = logger;
-    this.axiosInstance = axiosUtil.createInstance(
-      {
-        headers: {
-          "X-Auth-Token": `${config.apiKey}/${config.connectorId}`,
-        },
+    this.axiosInstance = Axios.create({
+      headers: {
+        "X-Auth-Token": `${config.apiKey}/${config.connectorId}`,
       },
-      logger,
-    );
+    });
   }
 
   public async getAccountDetails(): Promise<CarbonBlackAccount> {
