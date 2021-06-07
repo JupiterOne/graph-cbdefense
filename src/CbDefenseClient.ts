@@ -123,6 +123,7 @@ export default class CbDefenseClient {
         },
         "Encounted error retrieving alerts",
       );
+
       // CB API seems returns 500 errors for empty results
       if (err.status !== 500) {
         throw new IntegrationError({
@@ -154,32 +155,42 @@ export default class CbDefenseClient {
     let rowsProcessed = 0;
     let finished = false;
 
-    while (!finished) {
-      const start = rowsProcessed;
+    try {
+      while (!finished) {
+        const start = rowsProcessed;
 
-      const response = await this.axiosInstance.post(platformUrl, {
-        rows,
-        start,
-        criteria,
+        const response = await this.axiosInstance.post(platformUrl, {
+          rows,
+          start,
+          criteria,
+        });
+        const results = response.data.results;
+
+        pagesProcessed++;
+        rowsProcessed += results.length;
+        finished = response.data.num_found <= rowsProcessed;
+
+        this.logger.info(
+          {
+            found: response.data.num_found,
+            rowsProcessed,
+            rowsTotal: rowsProcessed,
+            pagesProcessed,
+            finished,
+          },
+          `Fetched page for ${platformUrl}`,
+        );
+
+        results.forEach(callback);
+      }
+    } catch (err) {
+      const response = err.response || {};
+      throw new IntegrationError({
+        cause: err,
+        endpoint: platformUrl,
+        status: response.status || err.status || "UNKNOWN",
+        statusText: response.statusText || err.statusText || "UNKNOWN",
       });
-      const results = response.data.results;
-
-      pagesProcessed++;
-      rowsProcessed += results.length;
-      finished = response.data.num_found <= rowsProcessed;
-
-      this.logger.info(
-        {
-          found: response.data.num_found,
-          rowsProcessed,
-          rowsTotal: rowsProcessed,
-          pagesProcessed,
-          finished,
-        },
-        `Fetched page for ${platformUrl}`,
-      );
-
-      results.forEach(callback);
     }
   }
 }
