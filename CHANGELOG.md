@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 1.2.2
+
+- Format error messages before logging to reduce logged service area.
+
 ## 1.2.1
 
 - Log 500 errors for alerts/devices instead of failing execution.
