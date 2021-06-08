@@ -8,6 +8,9 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Add tests for client errors and clean up error handling
+- Upgrade to typescript 4
+
 ## 1.2.2
 
 - Format error messages before logging to reduce logged service area.

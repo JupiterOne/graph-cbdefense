@@ -79,23 +79,29 @@ export default class CbDefenseClient {
   public async iterateDevices(
     callback: (agent: CarbonBlackDeviceSensor) => void,
   ): Promise<void> {
+    const url = "/devices/_search";
+
     try {
-      return this.iterateResults({
-        platformPath: "/devices/_search",
+      await this.iterateResults({
+        platformPath: url,
         callback,
       });
     } catch (err) {
-      this.logger.warn(
+      this.logger.info(
         {
           err,
         },
         "Encounted error retrieving devices",
       );
+      const response = err.response || {};
+
       // CB API seems returns 500 errors for empty results
-      if (err.status !== 500) {
+      if (response.status !== 500) {
         throw new IntegrationError({
           cause: err,
-          message: "Unable to retrieve devices",
+          code: `TENABLE_CLIENT_API_${response.status}_ERROR`,
+          statusCode: response.status,
+          message: `${response.statusText}: ${response.status} post ${url}`,
         });
       }
     }
@@ -105,9 +111,11 @@ export default class CbDefenseClient {
     callback: (alert: CarbonBlackAlert) => void,
     alertsSince: Date,
   ): Promise<void> {
+    const url = "/alerts/_search";
+
     try {
-      return this.iterateResults({
-        platformPath: "/alerts/_search",
+      await this.iterateResults({
+        platformPath: url,
         criteria: {
           create_time: {
             start: alertsSince.toISOString(),
@@ -117,18 +125,20 @@ export default class CbDefenseClient {
         callback,
       });
     } catch (err) {
-      this.logger.warn(
+      this.logger.info(
         {
           err,
         },
         "Encounted error retrieving alerts",
       );
-
+      const response = err.response || {};
       // CB API seems returns 500 errors for empty results
-      if (err.status !== 500) {
+      if (response.status !== 500) {
         throw new IntegrationError({
           cause: err,
-          message: "Unable to retrieve alerts",
+          code: `TENABLE_CLIENT_API_${response.status}_ERROR`,
+          statusCode: response.status,
+          message: `${response.statusText}: ${response.status} post ${url}`,
         });
       }
     }
@@ -155,42 +165,32 @@ export default class CbDefenseClient {
     let rowsProcessed = 0;
     let finished = false;
 
-    try {
-      while (!finished) {
-        const start = rowsProcessed;
+    while (!finished) {
+      const start = rowsProcessed;
 
-        const response = await this.axiosInstance.post(platformUrl, {
-          rows,
-          start,
-          criteria,
-        });
-        const results = response.data.results;
-
-        pagesProcessed++;
-        rowsProcessed += results.length;
-        finished = response.data.num_found <= rowsProcessed;
-
-        this.logger.info(
-          {
-            found: response.data.num_found,
-            rowsProcessed,
-            rowsTotal: rowsProcessed,
-            pagesProcessed,
-            finished,
-          },
-          `Fetched page for ${platformUrl}`,
-        );
-
-        results.forEach(callback);
-      }
-    } catch (err) {
-      const response = err.response || {};
-      throw new IntegrationError({
-        cause: err,
-        endpoint: platformUrl,
-        status: response.status || err.status || "UNKNOWN",
-        statusText: response.statusText || err.statusText || "UNKNOWN",
+      const response = await this.axiosInstance.post(platformUrl, {
+        rows,
+        start,
+        criteria,
       });
+      const results = response.data.results;
+
+      pagesProcessed++;
+      rowsProcessed += results.length;
+      finished = response.data.num_found <= rowsProcessed;
+
+      this.logger.info(
+        {
+          found: response.data.num_found,
+          rowsProcessed,
+          rowsTotal: rowsProcessed,
+          pagesProcessed,
+          finished,
+        },
+        `Fetched page for ${platformUrl}`,
+      );
+
+      results.forEach(callback);
     }
   }
 }

@@ -12,7 +12,8 @@
     "strictFunctionTypes": true,
     "allowJs": false,
     "moduleResolution": "node",
-    "target": "ESNext",
+    "target": "es2018",
+    "lib": ["es2018"],
     "module": "commonjs",
     "pretty": true,
     "inlineSourceMap": true
