@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 1.3.0
+
 - Add tests for client errors and clean up error handling
 - Upgrade to typescript 4
 
