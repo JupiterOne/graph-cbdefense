@@ -1,6 +1,6 @@
 /* tslint:disable:no-console */
 import { executeIntegrationLocal } from "@jupiterone/jupiter-managed-integration-sdk";
-import invocationConfig from "../src/index";
+import managedInvocationConfig from "../src/index";
 
 const integrationConfig = {
   site: process.env.CB_DEFENSE_LOCAL_EXECUTION_SITE as string,
@@ -15,7 +15,7 @@ const invocationArgs = {
 
 executeIntegrationLocal(
   integrationConfig,
-  invocationConfig,
+  managedInvocationConfig,
   invocationArgs,
 ).catch(err => {
   console.error(err);

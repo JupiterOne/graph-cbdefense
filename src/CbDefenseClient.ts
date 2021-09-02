@@ -4,7 +4,6 @@ import { Opaque } from "type-fest";
 import {
   IntegrationError,
   IntegrationInstanceAuthenticationError,
-  IntegrationLogger,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 
 import { CarbonBlackIntegrationConfig } from "./types";
@@ -25,9 +24,13 @@ export default class CbDefenseClient {
   private platformBaseUrl: string;
 
   private axiosInstance: axios.AxiosInstance;
-  private logger: IntegrationLogger;
+  // TODO retype to IntegrationLogger
+  private logger: { info: (...args: any[]) => boolean | void };
 
-  constructor(config: CarbonBlackIntegrationConfig, logger: IntegrationLogger) {
+  constructor(
+    config: CarbonBlackIntegrationConfig,
+    logger: { info: (...args: any[]) => boolean | void },
+  ) {
     this.site = config.site;
 
     this.platformBaseUrl = `https://defense-${

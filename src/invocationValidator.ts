@@ -1,7 +1,6 @@
 import {
   IntegrationInstanceAuthenticationError,
   IntegrationInstanceConfigError,
-  IntegrationValidationContext,
 } from "@jupiterone/jupiter-managed-integration-sdk";
 import CbDefenseClient from "./CbDefenseClient";
 import { CarbonBlackIntegrationConfig } from "./types";
@@ -21,11 +20,14 @@ import { CarbonBlackIntegrationConfig } from "./types";
  *
  * @param context
  */
-export default async function invocationValidator(
-  context: IntegrationValidationContext,
-) {
-  const { config } = context.instance;
-  const instanceConfig = config as CarbonBlackIntegrationConfig;
+export default async function invocationValidator({
+  instance,
+  logger,
+}: {
+  instance: { config: CarbonBlackIntegrationConfig };
+  logger: { info: (...args: any[]) => boolean | void };
+}) {
+  const instanceConfig = instance.config;
 
   if (!instanceConfig) {
     throw new IntegrationInstanceConfigError("Configuration missing");
@@ -45,7 +47,7 @@ export default async function invocationValidator(
     );
   }
 
-  const client = new CbDefenseClient(instanceConfig, context.logger);
+  const client = new CbDefenseClient(instanceConfig, logger);
   try {
     await client.getAccountDetails();
   } catch (err) {
