@@ -7,7 +7,6 @@ import {
   EntityFromIntegration,
   getTime,
   IntegrationRelationship,
-  MappedRelationshipFromIntegration,
   RelationshipDirection,
   RelationshipMapping,
 } from "@jupiterone/jupiter-managed-integration-sdk";
@@ -280,9 +279,7 @@ export function createAccountDeviceSensorRelationship(
   });
 }
 
-export function mapSensorToDeviceRelationship(
-  sensor: DeviceSensorEntity,
-): MappedRelationshipFromIntegration {
+export function mapSensorToDeviceRelationship(sensor: DeviceSensorEntity) {
   const hostname = sensor.hostname;
   const targetFilterKeys = sensor.macAddress
     ? [["_type", "macAddress"]]

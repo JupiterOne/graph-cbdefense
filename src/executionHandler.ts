@@ -3,7 +3,6 @@ import {
   IntegrationExecutionContext,
   IntegrationExecutionResult,
   IntegrationRelationship,
-  IntegrationServiceClient,
   MappedRelationshipFromIntegration,
   PersisterOperationsResult,
   summarizePersisterOperationsResults,
@@ -151,7 +150,9 @@ async function syncAlertFindings(
   const { provider, persister } = context;
 
   const alertsSinceDate = await determineAlertsSinceDate(
-    context.clients.getClients().integrationService,
+    await context.clients
+      .getClients()
+      .integrationService.lastSuccessfulSynchronizationTime(),
   );
 
   const recentAlertFindingEntities: EntityFromIntegration[] = [];
@@ -177,9 +178,8 @@ async function syncAlertFindings(
 }
 
 async function determineAlertsSinceDate(
-  integrationService: IntegrationServiceClient,
+  lastSuccessStartTime: number | null,
 ): Promise<Date> {
-  const lastSuccessStartTime = await integrationService.lastSuccessfulSynchronizationTime();
   if (lastSuccessStartTime) {
     return new Date(lastSuccessStartTime);
   } else {
