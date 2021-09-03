@@ -19,7 +19,7 @@
     "prebuild": "yarn test",
     "build": "rm -rf dist/* && yarn build:types && yarn build:src && yarn build:docs",
     "build:src": "babel src --extensions '.ts' --out-dir dist",
-    "build:docs": "ts-node tools/docs.ts",
+    "build:docs": "echo \"Removed old method of buildings docs\"",
     "build:types": "tsc --project tsconfig.dist.json --declaration --emitDeclarationOnly",
     "prepack": "yarn build",
     "lint": "yarn lint:ts && yarn lint:md",
