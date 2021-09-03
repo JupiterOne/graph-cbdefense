@@ -7,6 +7,7 @@ import {
   PersisterOperationsResult,
   summarizePersisterOperationsResults,
 } from "@jupiterone/jupiter-managed-integration-sdk";
+import { Entities, MappedRelationships, Relationships } from "./constants";
 
 import {
   createAccountDeviceSensorRelationship,
@@ -19,15 +20,7 @@ import {
   mapSensorToDeviceRelationship,
 } from "./converters";
 import initializeContext from "./initializeContext";
-import {
-  ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
-  ACCOUNT_ENTITY_TYPE,
-  ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
-  CbDefenseExecutionContext,
-  DEVICE_SENSOR_ENTITY_TYPE,
-  SENSOR_DEVICE_RELATIONSHIP_TYPE,
-  SERVICE_ENTITY_TYPE,
-} from "./types";
+import { CbDefenseExecutionContext } from "./types";
 
 export default async function executionHandler(
   context: IntegrationExecutionContext,
@@ -79,15 +72,17 @@ async function syncDeviceSensors(
   });
 
   const oldDeviceSensorEntities = await graph.findEntitiesByType(
-    DEVICE_SENSOR_ENTITY_TYPE,
+    Entities.DEVICE_SENSOR._type,
   );
 
   const [
     oldAccountDeviceSensorRelationships,
     oldMappedDeviceRelationships,
   ] = await Promise.all([
-    graph.findRelationshipsByType(ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE),
-    graph.findRelationshipsByType(SENSOR_DEVICE_RELATIONSHIP_TYPE),
+    graph.findRelationshipsByType(Relationships.ACCOUNT_HAS_SENSOR._type),
+    graph.findRelationshipsByType(
+      MappedRelationships.DEVICE_SENSOR_PROTECTS_DEVICE._type,
+    ),
   ]);
 
   return persister.publishPersisterOperations([
@@ -116,12 +111,12 @@ async function syncAccountAndService(
   const { graph, persister } = context;
 
   const [oldAccountEntities, oldServiceEntities] = await Promise.all([
-    graph.findAllEntitiesByType(ACCOUNT_ENTITY_TYPE),
-    graph.findEntitiesByType(SERVICE_ENTITY_TYPE),
+    graph.findAllEntitiesByType(Entities.ACCOUNT._type),
+    graph.findEntitiesByType(Entities.SERVICE._type),
   ]);
 
   const oldAccountServiceRelationships = await graph.findRelationshipsByType(
-    ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
+    Relationships.ACCOUNT_HAS_SERVICE._type,
   );
 
   return persister.publishPersisterOperations([

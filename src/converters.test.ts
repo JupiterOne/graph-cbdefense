@@ -1,6 +1,7 @@
 import { RelationshipFromIntegration } from "@jupiterone/jupiter-managed-integration-sdk";
 
 import { CarbonBlackAccount, CarbonBlackDeviceSensor } from "./CbDefenseClient";
+import { Entities, Relationships } from "./constants";
 import {
   createAccountDeviceSensorRelationship,
   createAccountEntity,
@@ -11,18 +12,6 @@ import {
   createServiceEntity,
   mapSensorToDeviceRelationship,
 } from "./converters";
-import {
-  ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
-  ACCOUNT_ENTITY_CLASS,
-  ACCOUNT_ENTITY_TYPE,
-  ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
-  ALERT_ENTITY_CLASS,
-  ALERT_ENTITY_TYPE,
-  DEVICE_SENSOR_ENTITY_CLASS,
-  DEVICE_SENSOR_ENTITY_TYPE,
-  SERVICE_ENTITY_CLASS,
-  SERVICE_ENTITY_TYPE,
-} from "./types";
 
 test("createAccountDeviceSensorRelationship", () => {
   const accountEntity = createAccountEntity({
@@ -38,7 +27,7 @@ test("createAccountDeviceSensorRelationship", () => {
     _fromEntityKey: accountEntity._key,
     _key: `${accountEntity._key}_has_${deviceEntity._key}`,
     _toEntityKey: deviceEntity._key,
-    _type: ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
+    _type: Relationships.ACCOUNT_HAS_SENSOR._type,
     displayName: "HAS",
   });
 });
@@ -57,7 +46,7 @@ test("createAccountServiceRelationship", () => {
     _fromEntityKey: accountEntity._key,
     _key: `${accountEntity._key}_has_${serviceEntity._key}`,
     _toEntityKey: serviceEntity._key,
-    _type: ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
+    _type: Relationships.ACCOUNT_HAS_SERVICE._type,
     displayName: "HAS",
   });
 });
@@ -71,9 +60,9 @@ test("createAccountEntity", () => {
 
   expect(createAccountEntity(account)).toEqual({
     _rawData: [{ name: "default", rawData: account }],
-    _class: [ACCOUNT_ENTITY_CLASS],
+    _class: Entities.ACCOUNT._class,
     _key: `carbonblack-account-1758`,
-    _type: ACCOUNT_ENTITY_TYPE,
+    _type: Entities.ACCOUNT._type,
     accountId: 1758,
     displayName: "lifeomic.com",
     name: "lifeomic.com",
@@ -85,9 +74,9 @@ test("createAccountEntity", () => {
 test("createServiceEntity", () => {
   expect(createServiceEntity("prod05", 1758)).toEqual({
     _rawData: [],
-    _class: [SERVICE_ENTITY_CLASS],
-    _key: `${SERVICE_ENTITY_TYPE}-1758`,
-    _type: SERVICE_ENTITY_TYPE,
+    _class: [Entities.SERVICE._class],
+    _key: `${Entities.SERVICE._type}-1758`,
+    _type: Entities.SERVICE._type,
     name: "CB Endpoint Protection Service",
     displayName: "CB Endpoint Protection Service",
     category: ["software", "other"],
@@ -192,9 +181,9 @@ describe("createDeviceEntity", () => {
           },
         },
       ],
-      _class: [DEVICE_SENSOR_ENTITY_CLASS],
+      _class: Entities.DEVICE_SENSOR._class,
       _key: "cbdefense-sensor-7891906",
-      _type: DEVICE_SENSOR_ENTITY_TYPE,
+      _type: Entities.DEVICE_SENSOR._type,
       displayName: data.name as string,
       hostname: "davids-macbook-pro",
       active: true,
@@ -363,8 +352,8 @@ describe("createAlertFindingEntity", () => {
       ],
 
       _key: "cb-alert-038894832709076d63111e99466f73575fcf3ca",
-      _type: ALERT_ENTITY_TYPE,
-      _class: ALERT_ENTITY_CLASS,
+      _type: Entities.ALERT._type,
+      _class: Entities.ALERT._class,
 
       name: "038894832709076d63111e99466f73575fcf3ca",
       displayName:
@@ -419,7 +408,7 @@ test("createDeviceSensorAlertFindingRelationship", () => {
   expect(
     createDeviceSensorAlertFindingRelationship({
       _key: "cb-alert-123",
-      _type: ALERT_ENTITY_TYPE,
+      _type: Entities.ALERT._type,
       deviceId: 9387,
     }),
   ).toEqual({
