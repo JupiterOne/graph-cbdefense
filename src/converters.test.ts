@@ -1,5 +1,3 @@
-import { RelationshipFromIntegration } from "@jupiterone/jupiter-managed-integration-sdk";
-
 import { CarbonBlackAccount, CarbonBlackDeviceSensor } from "./CbDefenseClient";
 import { Entities, Relationships } from "./constants";
 import {
@@ -80,6 +78,7 @@ test("createServiceEntity", () => {
     name: "CB Endpoint Protection Service",
     displayName: "CB Endpoint Protection Service",
     category: ["software", "other"],
+    function: ["monitoring"],
     endpoints: ["https://defense-prod05.conferdeploy.net"],
   });
 });
@@ -409,6 +408,7 @@ test("createDeviceSensorAlertFindingRelationship", () => {
     createDeviceSensorAlertFindingRelationship({
       _key: "cb-alert-123",
       _type: Entities.ALERT._type,
+      _class: Entities.ALERT._class,
       deviceId: 9387,
     }),
   ).toEqual({
@@ -418,5 +418,5 @@ test("createDeviceSensorAlertFindingRelationship", () => {
     _fromEntityKey: "cbdefense-sensor-9387",
     _toEntityKey: "cb-alert-123",
     displayName: "IDENTIFIED",
-  } as RelationshipFromIntegration);
+  });
 });

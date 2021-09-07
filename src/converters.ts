@@ -2,14 +2,14 @@ import camelCase from "lodash/camelCase";
 
 import {
   convertProperties,
+  createDirectRelationship,
   createIntegrationEntity,
-  createIntegrationRelationship,
-  EntityFromIntegration,
+  Entity,
+  ExplicitRelationship,
   getTime,
-  IntegrationRelationship,
   RelationshipDirection,
   RelationshipMapping,
-} from "@jupiterone/jupiter-managed-integration-sdk";
+} from "@jupiterone/integration-sdk-core";
 
 import {
   CarbonBlackAccount,
@@ -30,10 +30,10 @@ import {
 import { normalizeHostname } from "./util/normalizeHostname";
 
 /**
- * An extension of `EntityFromIntegration` used to build mapped relationships to
+ * An extension of `Entity` used to build mapped relationships to
  * the actual user endpoint device entities.
  */
-type DeviceSensorEntity = EntityFromIntegration & {
+export type DeviceSensorEntity = Entity & {
   hostname: string;
   macAddress?: string;
   email: string;
@@ -44,10 +44,10 @@ type DeviceSensorEntity = EntityFromIntegration & {
 };
 
 /**
- * An extensions of `EntityFromIntegration` used to build a relationship between
+ * An extensions of `Entity` used to build a relationship between
  * the sensor of a device and the alerts associated with the device.
  */
-type AlertFindingEntity = EntityFromIntegration & {
+export type AlertFindingEntity = Entity & {
   deviceId: number;
 };
 
@@ -55,9 +55,7 @@ function siteWeblink(site: string): string {
   return `https://defense-${site}.conferdeploy.net`;
 }
 
-export function createAccountEntity(
-  data: CarbonBlackAccount,
-): EntityFromIntegration {
+export function createAccountEntity(data: CarbonBlackAccount): Entity {
   return createIntegrationEntity({
     entityData: {
       source: data,
@@ -77,7 +75,7 @@ export function createAccountEntity(
 export function createServiceEntity(
   site: string,
   organizationId: number,
-): EntityFromIntegration {
+): Entity {
   return createIntegrationEntity({
     entityData: {
       source: {},
@@ -87,6 +85,7 @@ export function createServiceEntity(
         _type: Entities.SERVICE._type,
         name: "CB Endpoint Protection Service",
         category: ["software", "other"],
+        function: ["monitoring"],
         endpoints: [siteWeblink(site)],
       },
     },
@@ -243,10 +242,10 @@ export function normalizeSeverity(
 }
 
 export function createAccountServiceRelationship(
-  account: EntityFromIntegration,
-  service: EntityFromIntegration,
-): IntegrationRelationship {
-  return createIntegrationRelationship({
+  account: Entity,
+  service: Entity,
+): ExplicitRelationship {
+  return createDirectRelationship({
     _class: Relationships.ACCOUNT_HAS_SERVICE._class,
     from: account,
     to: service,
@@ -258,10 +257,10 @@ export function createAccountServiceRelationship(
 }
 
 export function createAccountDeviceSensorRelationship(
-  account: EntityFromIntegration,
-  device: EntityFromIntegration,
-): IntegrationRelationship {
-  return createIntegrationRelationship({
+  account: Entity,
+  device: Entity,
+): ExplicitRelationship {
+  return createDirectRelationship({
     _class: Relationships.ACCOUNT_HAS_SENSOR._class,
     from: account,
     to: device,
@@ -323,8 +322,8 @@ export function mapSensorToDeviceRelationship(sensor: DeviceSensorEntity) {
 
 export function createDeviceSensorAlertFindingRelationship(
   alertFinding: AlertFindingEntity,
-): IntegrationRelationship {
-  return createIntegrationRelationship({
+): ExplicitRelationship {
+  return createDirectRelationship({
     _class: Relationships.SENSOR_IDENTIFIED_ALERT._class,
     fromKey: deviceSensorKey(alertFinding.deviceId),
     fromType: Entities.DEVICE_SENSOR._type,

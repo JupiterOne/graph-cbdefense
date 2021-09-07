@@ -14,8 +14,8 @@
   },
   "scripts": {
     "start": "ts-node --require dotenv/config tools/execute.ts | bunyan",
-    "start:containers": "docker-compose up -d",
-    "stop:containers": "docker-compose down",
+    "start:containers": "echo \"Removed start:containers\"",
+    "stop:containers": "echo \"Removed stop:containers\"",
     "prebuild": "yarn test",
     "build": "rm -rf dist/* && yarn build:types && yarn build:src && yarn build:docs",
     "build:src": "babel src --extensions '.ts' --out-dir dist",
@@ -30,7 +30,6 @@
   },
   "dependencies": {
     "@jupiterone/integration-sdk-core": "^6.18.0",
-    "@jupiterone/jupiter-managed-integration-sdk": "^36.0.1",
     "axios": "^0.21.1",
     "lodash": "^4.17.15"
   },

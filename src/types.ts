@@ -1,22 +1,8 @@
-import {
-  GraphClient,
-  IntegrationExecutionContext,
-  PersisterClient,
-} from "@jupiterone/jupiter-managed-integration-sdk";
-
-import CbDefenseClient from "./CbDefenseClient";
-
 export interface CarbonBlackIntegrationConfig {
   site: string;
   orgKey: string;
   connectorId: string;
   apiKey: string;
-}
-
-export interface CbDefenseExecutionContext extends IntegrationExecutionContext {
-  graph: GraphClient;
-  persister: PersisterClient;
-  provider: CbDefenseClient;
 }
 
 export enum FindingSeverityNormal {

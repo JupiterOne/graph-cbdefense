@@ -1,7 +1,4 @@
-import {
-  IntegrationInstanceAuthenticationError,
-  IntegrationInstanceConfigError,
-} from "@jupiterone/jupiter-managed-integration-sdk";
+import { IntegrationValidationError } from "@jupiterone/integration-sdk-core";
 import CbDefenseClient from "./CbDefenseClient";
 import { CarbonBlackIntegrationConfig } from "./types";
 
@@ -30,27 +27,23 @@ export default async function invocationValidator({
   const instanceConfig = instance.config;
 
   if (!instanceConfig) {
-    throw new IntegrationInstanceConfigError("Configuration missing");
+    throw new IntegrationValidationError("Configuration missing");
   }
 
   const { site, orgKey, connectorId, apiKey } = instanceConfig;
 
   if (!(site && orgKey && connectorId && apiKey)) {
-    throw new IntegrationInstanceConfigError(
+    throw new IntegrationValidationError(
       "Configuration requires site, orgKey, connectorId, and apiKey",
     );
   }
 
   if (site.match("conferdeploy")) {
-    throw new IntegrationInstanceConfigError(
+    throw new IntegrationValidationError(
       "Site is invalid; should be the environment only, not the full dashboard URL. For example, `prod05` in `https://defense-prod05.conferdeploy.net/`",
     );
   }
 
   const client = new CbDefenseClient(instanceConfig, logger);
-  try {
-    await client.getAccountDetails();
-  } catch (err) {
-    throw new IntegrationInstanceAuthenticationError(err);
-  }
+  await client.getAccountDetails();
 }

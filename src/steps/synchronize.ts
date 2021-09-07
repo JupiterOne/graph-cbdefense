@@ -1,7 +1,7 @@
 import { Entity, IntegrationStepExecutionContext, Step } from "@jupiterone/integration-sdk-core";
 import CbDefenseClient from "../CbDefenseClient";
 import { StepIds } from "../constants";
-import { createAccountDeviceSensorRelationship, createAccountEntity, createAccountServiceRelationship, createAlertFindingEntity, createDeviceSensorAlertFindingRelationship, createDeviceSensorEntity, createServiceEntity, mapSensorToDeviceRelationship } from "../converters";
+import { AlertFindingEntity, createAccountDeviceSensorRelationship, createAccountEntity, createAccountServiceRelationship, createAlertFindingEntity, createDeviceSensorAlertFindingRelationship, createDeviceSensorEntity, createServiceEntity, DeviceSensorEntity, mapSensorToDeviceRelationship } from "../converters";
 import { CarbonBlackIntegrationConfig } from "../types";
 
 async function synchronize(
@@ -28,7 +28,7 @@ async function syncDeviceSensors(
   const { jobState } = context;
 
   await provider.iterateDevices(async device => {
-    const deviceEntity  = await jobState.addEntity(createDeviceSensorEntity(device));
+    const deviceEntity = await jobState.addEntity(createDeviceSensorEntity(device)) as DeviceSensorEntity;
     await jobState.addRelationship(createAccountDeviceSensorRelationship(accountEntity, deviceEntity));
     await jobState.addRelationship(mapSensorToDeviceRelationship(deviceEntity));
   });
@@ -41,7 +41,7 @@ async function syncAlertFindings(
   const { jobState, executionHistory } = context;
   const alertsSinceDate = await determineAlertsSinceDate(executionHistory.lastSuccessful?.startedOn);
   await provider.iterateAlerts(async alert => {
-    const findingEntity = await jobState.addEntity(createAlertFindingEntity(alert));
+    const findingEntity = await jobState.addEntity(createAlertFindingEntity(alert)) as AlertFindingEntity;
     await jobState.addRelationship(createDeviceSensorAlertFindingRelationship(findingEntity));
   }, alertsSinceDate);
 }

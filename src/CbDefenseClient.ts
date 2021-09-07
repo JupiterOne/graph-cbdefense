@@ -1,10 +1,9 @@
-import Axios, * as axios from "axios";
-import { Opaque } from "type-fest";
-
 import {
   IntegrationError,
-  IntegrationInstanceAuthenticationError,
-} from "@jupiterone/jupiter-managed-integration-sdk";
+  IntegrationProviderAuthenticationError,
+} from "@jupiterone/integration-sdk-core";
+import Axios, * as axios from "axios";
+import { Opaque } from "type-fest";
 
 import { CarbonBlackIntegrationConfig } from "./types";
 
@@ -46,14 +45,12 @@ export default class CbDefenseClient {
   }
 
   public async getAccountDetails(): Promise<CarbonBlackAccount> {
+    const endpoint = `${this.platformBaseUrl}/devices/_search`;
     try {
-      const response = await this.axiosInstance.post(
-        `${this.platformBaseUrl}/devices/_search`,
-        {
-          rows: 1,
-          start: 0,
-        },
-      );
+      const response = await this.axiosInstance.post(endpoint, {
+        rows: 1,
+        start: 0,
+      });
 
       const devices = response.data.results;
       if (devices && devices.length > 0) {
@@ -63,16 +60,23 @@ export default class CbDefenseClient {
           organization_id: devices[0].organization_id,
         };
       } else {
-        throw new IntegrationError(
-          "Unable to retrieve account details, no device sensor found",
-        );
+        throw new IntegrationError({
+          code: "NO_DEVICE_SENSORS_FOUND",
+          message: "Unable to retrieve account details, no device sensor found",
+        });
       }
     } catch (err) {
       if (err.status === 401) {
-        throw new IntegrationInstanceAuthenticationError(err);
+        throw new IntegrationProviderAuthenticationError({
+          endpoint,
+          cause: err,
+          status: err.status,
+          statusText: err.statusText,
+        });
       } else {
         throw new IntegrationError({
           cause: err,
+          code: "ACCOUNT_DETAILS_ERROR",
           message: "Unable to retrieve account details",
         });
       }
@@ -103,7 +107,6 @@ export default class CbDefenseClient {
         throw new IntegrationError({
           cause: err,
           code: `TENABLE_CLIENT_API_${response.status}_ERROR`,
-          statusCode: response.status,
           message: `${response.statusText}: ${response.status} post ${url}`,
         });
       }
@@ -140,7 +143,6 @@ export default class CbDefenseClient {
         throw new IntegrationError({
           cause: err,
           code: `TENABLE_CLIENT_API_${response.status}_ERROR`,
-          statusCode: response.status,
           message: `${response.statusText}: ${response.status} post ${url}`,
         });
       }
