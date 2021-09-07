@@ -39,16 +39,16 @@ async function syncAlertFindings(
   provider: CbDefenseClient,
 ) {
   const { jobState, executionHistory } = context;
-  const alertsSinceDate = await determineAlertsSinceDate(executionHistory.lastSuccessful?.startedOn);
+  const alertsSinceDate = determineAlertsSinceDate(executionHistory.lastSuccessful?.startedOn);
   await provider.iterateAlerts(async alert => {
     const findingEntity = await jobState.addEntity(createAlertFindingEntity(alert)) as AlertFindingEntity;
     await jobState.addRelationship(createDeviceSensorAlertFindingRelationship(findingEntity));
   }, alertsSinceDate);
 }
 
-async function determineAlertsSinceDate(
+function determineAlertsSinceDate(
   lastSuccessStartTime: number | undefined,
-): Promise<Date> {
+): Date {
   if (lastSuccessStartTime) {
     return new Date(lastSuccessStartTime);
   } else {

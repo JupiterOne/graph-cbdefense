@@ -85,29 +85,54 @@ parameters to the integration instance configuration:
 4. Click the **trash can** icon.
 5. Click the **Remove** button to delete the integration.
 
+[1]:
+  https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/
+
+<!-- {J1_DOCUMENTATION_MARKER_START} -->
+<!--
+********************************************************************************
+NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+DOCUMENTATION FOR USAGE INFORMATION:
+
+https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
+********************************************************************************
+-->
+
 ## Data Model
 
 ### Entities
 
-The following entity resources are ingested when the integration runs:
+The following entities are created:
 
-| Example Entity Resource | \_type : \_class of the Entity        |
-| ----------------------- | ------------------------------------- |
-| Account                 | `carbonblack_psc_account` : `Account` |
-| Service                 | `cb_endpoint_protection` : `Service`  |
-| Device Sensor Agent     | `cbdefense_sensor` : `HostAgent`      |
-| Alert                   | `cbdefense_alert` : `Finding`         |
+| Resources           | Entity `_type`            | Entity `_class` |
+| ------------------- | ------------------------- | --------------- |
+| Account             | `carbonblack_psc_account` | `Account`       |
+| Alert               | `cbdefense_alert`         | `Finding`       |
+| Device Sensor Agent | `cbdefense_sensor`        | `HostAgent`     |
+| Service             | `cb_endpoint_protection`  | `Service`       |
 
 ### Relationships
 
 The following relationships are created/mapped:
 
-| Relationships                                              |
-| ---------------------------------------------------------- |
-| `carbonblack_psc_account` **HAS** `cbdefense_sensor`       |
-| `carbonblack_psc_account` **HAS** `cb_endpoint_protection` |
-| `cbdefense_sensor` **ASSIGNED** `cb_sensor_policy`         |
-| `cbdefense_sensor` **IDENTIFIED** `cbdefense_alert`        |
+| Source Entity `_type`     | Relationship `_class` | Target Entity `_type`    |
+| ------------------------- | --------------------- | ------------------------ |
+| `carbonblack_psc_account` | **HAS**               | `cb_endpoint_protection` |
+| `carbonblack_psc_account` | **HAS**               | `cbdefense_sensor`       |
+| `cbdefense_sensor`        | **IDENTIFIED**        | `cbdefense_alert`        |
 
-[1]:
-  https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/
+### Mapped Relationships
+
+The following mapped relationships are created:
+
+| Source Entity `_type` | Relationship `_class` | Target Entity `_type` | Direction |
+| --------------------- | --------------------- | --------------------- | --------- |
+| `cbdefense_sensor`    | **PROTECTS**          | `*user_endpoint*`     | FORWARD   |
+
+<!--
+********************************************************************************
+END OF GENERATED DOCUMENTATION AFTER BELOW MARKER
+********************************************************************************
+-->
+<!-- {J1_DOCUMENTATION_MARKER_END} -->
