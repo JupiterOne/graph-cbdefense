@@ -1,48 +1,29 @@
-import { IntegrationInvocationConfig } from "@jupiterone/integration-sdk-core";
-import { Entities, MappedRelationships, Relationships } from "./constants";
+import { IntegrationInvocationConfig } from '@jupiterone/integration-sdk-core';
 
-import invocationValidator from "./invocationValidator";
-import { CarbonBlackIntegrationConfig } from "./types";
+import invocationValidator from './invocationValidator';
+import { synchronizeStep } from './steps/synchronize';
+import { CarbonBlackIntegrationConfig } from './types';
 
-export const invocationConfig: IntegrationInvocationConfig<
-  CarbonBlackIntegrationConfig
-> = {
-  instanceConfigFields: {
-    site: {
-      type: "string",
-      mask: false,
+export const invocationConfig: IntegrationInvocationConfig<CarbonBlackIntegrationConfig> =
+  {
+    instanceConfigFields: {
+      site: {
+        type: 'string',
+        mask: false,
+      },
+      orgKey: {
+        type: 'string',
+        mask: false,
+      },
+      connectorId: {
+        type: 'string',
+        mask: false,
+      },
+      apiKey: {
+        type: 'string',
+        mask: true,
+      },
     },
-    orgKey: {
-      type: "string",
-      mask: false,
-    },
-    connectorId: {
-      type: "string",
-      mask: false,
-    },
-    apiKey: {
-      type: "string",
-      mask: true,
-    },
-  },
-  validateInvocation: invocationValidator,
-  integrationSteps: [
-    {
-      id: "synchronize",
-      name: "Synchronize",
-      entities: [
-        Entities.ACCOUNT,
-        Entities.SERVICE,
-        Entities.DEVICE_SENSOR,
-        Entities.ALERT,
-      ],
-      relationships: [
-        Relationships.ACCOUNT_HAS_SERVICE,
-        Relationships.ACCOUNT_HAS_SENSOR,
-        Relationships.SENSOR_IDENTIFIED_ALERT,
-      ],
-      mappedRelationships: [MappedRelationships.DEVICE_SENSOR_PROTECTS_DEVICE],
-      executionHandler: () => undefined,
-    },
-  ],
-};
+    validateInvocation: invocationValidator,
+    integrationSteps: [synchronizeStep],
+  };
