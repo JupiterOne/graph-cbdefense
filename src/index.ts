@@ -1,7 +1,7 @@
 import { IntegrationInvocationConfig } from '@jupiterone/integration-sdk-core';
 
 import invocationValidator from './invocationValidator';
-import { synchronizeStep } from './steps/synchronize';
+import { integrationSteps } from './steps/synchronize';
 import { CarbonBlackIntegrationConfig } from './types';
 
 export const invocationConfig: IntegrationInvocationConfig<CarbonBlackIntegrationConfig> =
@@ -25,5 +25,5 @@ export const invocationConfig: IntegrationInvocationConfig<CarbonBlackIntegratio
       },
     },
     validateInvocation: invocationValidator,
-    integrationSteps: [synchronizeStep],
+    integrationSteps,
   };
