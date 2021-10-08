@@ -2,15 +2,14 @@ import camelCase from "lodash/camelCase";
 
 import {
   convertProperties,
+  createDirectRelationship,
   createIntegrationEntity,
-  createIntegrationRelationship,
-  EntityFromIntegration,
+  Entity,
+  ExplicitRelationship,
   getTime,
-  IntegrationRelationship,
-  MappedRelationshipFromIntegration,
   RelationshipDirection,
   RelationshipMapping,
-} from "@jupiterone/jupiter-managed-integration-sdk";
+} from "@jupiterone/integration-sdk-core";
 
 import {
   CarbonBlackAccount,
@@ -18,30 +17,23 @@ import {
   CarbonBlackDeviceSensor,
 } from "./CbDefenseClient";
 import {
-  ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
-  ACCOUNT_ENTITY_CLASS,
-  ACCOUNT_ENTITY_TYPE,
-  ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
-  ALERT_ENTITY_CLASS,
-  ALERT_ENTITY_TYPE,
-  DEVICE_ENTITY_CLASS,
-  DEVICE_ENTITY_TYPE,
-  DEVICE_SENSOR_ENTITY_CLASS,
-  DEVICE_SENSOR_ENTITY_TYPE,
+  Entities,
+  MappedRelationships,
+  Relationships,
+  TargetEntities,
+} from "./constants";
+import {
   FindingSeverityNormal,
   FindingSeverityNormalName,
   FindingSeverityNormalNames,
-  SENSOR_DEVICE_RELATIONSHIP_TYPE,
-  SERVICE_ENTITY_CLASS,
-  SERVICE_ENTITY_TYPE,
 } from "./types";
 import { normalizeHostname } from "./util/normalizeHostname";
 
 /**
- * An extension of `EntityFromIntegration` used to build mapped relationships to
+ * An extension of `Entity` used to build mapped relationships to
  * the actual user endpoint device entities.
  */
-type DeviceSensorEntity = EntityFromIntegration & {
+export type DeviceSensorEntity = Entity & {
   hostname: string;
   macAddress?: string;
   email: string;
@@ -52,10 +44,10 @@ type DeviceSensorEntity = EntityFromIntegration & {
 };
 
 /**
- * An extensions of `EntityFromIntegration` used to build a relationship between
+ * An extensions of `Entity` used to build a relationship between
  * the sensor of a device and the alerts associated with the device.
  */
-type AlertFindingEntity = EntityFromIntegration & {
+export type AlertFindingEntity = Entity & {
   deviceId: number;
 };
 
@@ -63,16 +55,14 @@ function siteWeblink(site: string): string {
   return `https://defense-${site}.conferdeploy.net`;
 }
 
-export function createAccountEntity(
-  data: CarbonBlackAccount,
-): EntityFromIntegration {
+export function createAccountEntity(data: CarbonBlackAccount): Entity {
   return createIntegrationEntity({
     entityData: {
       source: data,
       assign: {
         _key: `carbonblack-account-${data.organization_id}`,
-        _class: ACCOUNT_ENTITY_CLASS,
-        _type: ACCOUNT_ENTITY_TYPE,
+        _class: Entities.ACCOUNT._class,
+        _type: Entities.ACCOUNT._type,
         accountId: data.organization_id,
         name: data.organization_name,
         organization: data.organization_name.replace(/\.[a-z]{2,3}$/, ""),
@@ -85,16 +75,17 @@ export function createAccountEntity(
 export function createServiceEntity(
   site: string,
   organizationId: number,
-): EntityFromIntegration {
+): Entity {
   return createIntegrationEntity({
     entityData: {
       source: {},
       assign: {
-        _key: `${SERVICE_ENTITY_TYPE}-${organizationId}`,
-        _class: SERVICE_ENTITY_CLASS,
-        _type: SERVICE_ENTITY_TYPE,
+        _key: `${Entities.SERVICE._type}-${organizationId}`,
+        _class: Entities.SERVICE._class,
+        _type: Entities.SERVICE._type,
         name: "CB Endpoint Protection Service",
         category: ["software", "other"],
+        function: ["monitoring"],
         endpoints: [siteWeblink(site)],
       },
     },
@@ -131,8 +122,8 @@ export function createDeviceSensorEntity(
         ...convertProperties(source),
         ...convertTimeProperties(source),
         _key: deviceSensorKey(source.id),
-        _class: DEVICE_SENSOR_ENTITY_CLASS,
-        _type: DEVICE_SENSOR_ENTITY_TYPE,
+        _class: Entities.DEVICE_SENSOR._class,
+        _type: Entities.DEVICE_SENSOR._type,
         id: String(source.id),
         name: source.name || "cbdefense-sensor",
         hostname: normalizeHostname(source.name),
@@ -167,8 +158,8 @@ export function createAlertFindingEntity(
         ...convertProperties(data),
         ...convertTimeProperties(data),
         _key: `cb-alert-${data.id}`,
-        _type: ALERT_ENTITY_TYPE,
-        _class: ALERT_ENTITY_CLASS,
+        _type: Entities.ALERT._type,
+        _class: Entities.ALERT._class,
         name: data.id,
         displayName: alertFindingDisplayName(data),
         createdOn: getTime(data.create_time),
@@ -251,38 +242,36 @@ export function normalizeSeverity(
 }
 
 export function createAccountServiceRelationship(
-  account: EntityFromIntegration,
-  service: EntityFromIntegration,
-): IntegrationRelationship {
-  return createIntegrationRelationship({
-    _class: "HAS",
+  account: Entity,
+  service: Entity,
+): ExplicitRelationship {
+  return createDirectRelationship({
+    _class: Relationships.ACCOUNT_HAS_SERVICE._class,
     from: account,
     to: service,
     properties: {
       _key: `${account._key}_has_${service._key}`,
-      _type: ACCOUNT_SERVICE_RELATIONSHIP_TYPE,
+      _type: Relationships.ACCOUNT_HAS_SERVICE._type,
     },
   });
 }
 
 export function createAccountDeviceSensorRelationship(
-  account: EntityFromIntegration,
-  device: EntityFromIntegration,
-): IntegrationRelationship {
-  return createIntegrationRelationship({
-    _class: "HAS",
+  account: Entity,
+  device: Entity,
+): ExplicitRelationship {
+  return createDirectRelationship({
+    _class: Relationships.ACCOUNT_HAS_SENSOR._class,
     from: account,
     to: device,
     properties: {
       _key: `${account._key}_has_${device._key}`,
-      _type: ACCOUNT_DEVICE_SENSOR_RELATIONSHIP_TYPE,
+      _type: Relationships.ACCOUNT_HAS_SENSOR._type,
     },
   });
 }
 
-export function mapSensorToDeviceRelationship(
-  sensor: DeviceSensorEntity,
-): MappedRelationshipFromIntegration {
+export function mapSensorToDeviceRelationship(sensor: DeviceSensorEntity) {
   const hostname = sensor.hostname;
   const targetFilterKeys = sensor.macAddress
     ? [["_type", "macAddress"]]
@@ -306,8 +295,8 @@ export function mapSensorToDeviceRelationship(
     sourceEntityKey: sensor._key,
     targetFilterKeys,
     targetEntity: {
-      _type: DEVICE_ENTITY_TYPE,
-      _class: DEVICE_ENTITY_CLASS,
+      _type: TargetEntities.DEVICE._type,
+      _class: TargetEntities.DEVICE._class,
       owner: sensor.email,
       displayName: hostname,
       hostname,
@@ -325,19 +314,19 @@ export function mapSensorToDeviceRelationship(
 
   return {
     _key: `${sensor._key}|protects|device-${hostname}`,
-    _type: SENSOR_DEVICE_RELATIONSHIP_TYPE,
-    _class: "PROTECTS",
+    _type: MappedRelationships.DEVICE_SENSOR_PROTECTS_DEVICE._type,
+    _class: MappedRelationships.DEVICE_SENSOR_PROTECTS_DEVICE._class,
     _mapping: mapping,
   };
 }
 
 export function createDeviceSensorAlertFindingRelationship(
   alertFinding: AlertFindingEntity,
-): IntegrationRelationship {
-  return createIntegrationRelationship({
-    _class: "IDENTIFIED",
+): ExplicitRelationship {
+  return createDirectRelationship({
+    _class: Relationships.SENSOR_IDENTIFIED_ALERT._class,
     fromKey: deviceSensorKey(alertFinding.deviceId),
-    fromType: DEVICE_SENSOR_ENTITY_TYPE,
+    fromType: Entities.DEVICE_SENSOR._type,
     toKey: alertFinding._key,
     toType: alertFinding._type,
   });

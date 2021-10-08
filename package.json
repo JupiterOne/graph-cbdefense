@@ -2,93 +2,38 @@
   "name": "@jupiterone/graph-cbdefense",
   "version": "1.3.0",
   "description": "JupiterOne managed integration for Carbon Black Defense.",
-  "main": "dist/index.js",
-  "repository": "https://github.com/jupiterone/graph-cbdefense",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MPL-2.0",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
   "files": [
-    "LICENSE",
-    "dist"
+    "src"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "start": "ts-node --require dotenv/config tools/execute.ts | bunyan",
-    "start:containers": "docker-compose up -d",
-    "stop:containers": "docker-compose down",
-    "prebuild": "yarn test",
-    "build": "rm -rf dist/* && yarn build:types && yarn build:src && yarn build:docs",
-    "build:src": "babel src --extensions '.ts' --out-dir dist",
-    "build:docs": "ts-node tools/docs.ts",
-    "build:types": "tsc --project tsconfig.dist.json --declaration --emitDeclarationOnly",
-    "prepack": "yarn build",
-    "lint": "yarn lint:ts && yarn lint:md",
-    "lint:md": "remark .",
-    "lint:ts": "tslint --project .",
-    "format": "yarn prettier --write '**/*.{ts,js,json,md}'",
-    "test": "jest"
+    "start": "j1-integration collect",
+    "graph": "j1-integration visualize",
+    "graph:types": "j1-integration visualize-types",
+    "lint": "eslint . --cache --fix --ext .ts,.tsx",
+    "format": "prettier --write '**/*.{ts,js,json,css,md,yml}'",
+    "type-check": "tsc",
+    "test": "jest",
+    "test:env": "LOAD_ENV=1 yarn test",
+    "test:ci": "yarn lint && yarn type-check && yarn test",
+    "build": "tsc -p tsconfig.dist.json --declaration && cp README.md dist/README.md",
+    "prepush": "yarn lint && yarn type-check && jest --changedSince main"
   },
   "dependencies": {
-    "@jupiterone/jupiter-managed-integration-sdk": "^36.0.1",
+    "@jupiterone/integration-sdk-core": "^6.18.0",
     "axios": "^0.21.1",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.15",
+    "type-fest": "^0.15.1"
   },
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.2.2",
-    "@babel/plugin-proposal-class-properties": "^7.3.4",
-    "@babel/plugin-proposal-object-rest-spread": "^7.3.4",
-    "@babel/preset-env": "^7.3.1",
-    "@babel/preset-typescript": "^7.1.0",
-    "@jupiterone/integration-sdk-testing": "^6.5.0",
-    "@types/bunyan": "^1.8.5",
-    "@types/fs-extra": "^7.0.0",
-    "@types/gremlin": "^3.4.2",
-    "@types/jest": "^26.0.23",
-    "@types/lodash": "^4.14.155",
-    "@types/node": "~8.10.0",
-    "@types/uuid": "^3.4.4",
-    "aws-sdk": "^2.828.0",
-    "bunyan": "^1.8.12",
-    "dotenv": "^8.0.0",
-    "fs-extra": "^8.0.1",
-    "husky": "^2.3.0",
-    "jest": "^26.4.2",
-    "jest-haste-map": "^26.4.2",
-    "jest-resolve": "^26.4.2",
-    "lint-staged": "^8.1.3",
-    "prettier": "1.17.1",
-    "remark-cli": "^8.0.0",
-    "remark-lint": "^7.0.0",
-    "remark-preset-lint-consistent": "^3.0.0",
-    "remark-preset-lint-markdown-style-guide": "^3.0.0",
-    "remark-preset-lint-recommended": "^4.0.0",
-    "ts-jest": "^26.4.2",
-    "ts-node": "^9.1.1",
-    "tslint": "^5.12.1",
-    "tslint-config-prettier": "^1.18.0",
-    "type-fest": "^0.15.1",
-    "typescript": "^4.2.4"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.md": [
-      "remark .",
-      "prettier --write",
-      "git add"
-    ],
-    "*.ts": [
-      "tslint --project .",
-      "prettier --write",
-      "git add"
-    ],
-    "*.{js,json}": [
-      "prettier --write",
-      "git add"
-    ]
+    "@jupiterone/integration-sdk-dev-tools": "^6.18.0",
+    "@jupiterone/integration-sdk-testing": "^6.18.0",
+    "@types/uuid": "^8.3.1",
+    "uuid": "^8.3.2"
   }
 }
