@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Updated integration to use `@jupiterone/integration-sdk-*` open-source
+  packages
+
 ## 1.3.0
 
 - Add tests for client errors and clean up error handling
