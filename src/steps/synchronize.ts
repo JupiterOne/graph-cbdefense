@@ -1,5 +1,6 @@
 import {
   Entity,
+  IntegrationError,
   IntegrationStepExecutionContext,
   Step,
 } from '@jupiterone/integration-sdk-core';
@@ -8,6 +9,7 @@ import {
   Entities,
   MappedRelationships,
   Relationships,
+  SetDataKeys,
   StepIds,
 } from '../constants';
 import {
@@ -24,7 +26,7 @@ import {
 } from '../converters';
 import { CarbonBlackIntegrationConfig } from '../types';
 
-async function synchronize(
+async function getAccount(
   context: IntegrationStepExecutionContext<CarbonBlackIntegrationConfig>,
 ) {
   const { jobState } = context;
@@ -34,23 +36,28 @@ async function synchronize(
   const accountEntity = await jobState.addEntity(
     createAccountEntity(accountData),
   );
+  await jobState.setData(SetDataKeys.ACCOUNT, accountEntity);
   const serviceEntity = await jobState.addEntity(
     createServiceEntity(accountData.site, accountData.organization_id),
   );
   await jobState.addRelationship(
     createAccountServiceRelationship(accountEntity, serviceEntity),
   );
-
-  await syncDeviceSensors(context, provider, accountEntity);
-  await syncAlertFindings(context, provider);
 }
 
 async function syncDeviceSensors(
   context: IntegrationStepExecutionContext<CarbonBlackIntegrationConfig>,
-  provider: CbDefenseClient,
-  accountEntity: Entity,
 ) {
   const { jobState } = context;
+  const accountEntity = await jobState.getData<Entity>(SetDataKeys.ACCOUNT);
+  if (!accountEntity) {
+    throw new IntegrationError({
+      code: 'MISSING_ACCOUNT_ENTITY',
+      message:
+        'Could not synchronize device sensors - account entity not found.',
+    });
+  }
+  const provider = new CbDefenseClient(context.instance.config, context.logger);
 
   await provider.iterateDevices(async (device) => {
     const deviceEntity = (await jobState.addEntity(
@@ -65,9 +72,10 @@ async function syncDeviceSensors(
 
 async function syncAlertFindings(
   context: IntegrationStepExecutionContext<CarbonBlackIntegrationConfig>,
-  provider: CbDefenseClient,
 ) {
   const { jobState, executionHistory } = context;
+  const provider = new CbDefenseClient(context.instance.config, context.logger);
+
   const alertsSinceDate = determineAlertsSinceDate(
     executionHistory.lastSuccessful?.startedOn,
   );
@@ -92,22 +100,31 @@ function determineAlertsSinceDate(
   }
 }
 
-export const synchronizeStep: Step<
+export const integrationSteps: Step<
   IntegrationStepExecutionContext<CarbonBlackIntegrationConfig>
-> = {
-  id: StepIds.SYNCHRONIZE,
-  name: 'Synchronize',
-  entities: [
-    Entities.ACCOUNT,
-    Entities.SERVICE,
-    Entities.DEVICE_SENSOR,
-    Entities.ALERT,
-  ],
-  relationships: [
-    Relationships.ACCOUNT_HAS_SERVICE,
-    Relationships.ACCOUNT_HAS_SENSOR,
-    Relationships.SENSOR_IDENTIFIED_ALERT,
-  ],
-  mappedRelationships: [MappedRelationships.DEVICE_SENSOR_PROTECTS_DEVICE],
-  executionHandler: synchronize,
-};
+>[] = [
+  {
+    id: StepIds.ACCOUNT,
+    name: 'Get Account',
+    entities: [Entities.ACCOUNT, Entities.SERVICE],
+    relationships: [Relationships.ACCOUNT_HAS_SERVICE],
+    executionHandler: getAccount,
+  },
+  {
+    id: StepIds.DEVICE_SENSORS,
+    name: 'Fetch Device Sensors',
+    entities: [Entities.DEVICE_SENSOR],
+    relationships: [Relationships.ACCOUNT_HAS_SENSOR],
+    mappedRelationships: [MappedRelationships.DEVICE_SENSOR_PROTECTS_DEVICE],
+    dependsOn: [StepIds.ACCOUNT],
+    executionHandler: syncDeviceSensors,
+  },
+  {
+    id: StepIds.ALERT_FINDINGS,
+    name: 'Fetch Device Sensors',
+    entities: [Entities.ALERT],
+    relationships: [Relationships.SENSOR_IDENTIFIED_ALERT],
+    dependsOn: [StepIds.DEVICE_SENSORS],
+    executionHandler: syncAlertFindings,
+  },
+];
