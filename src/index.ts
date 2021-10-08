@@ -1,30 +1,29 @@
-import { IntegrationInvocationConfig } from "@jupiterone/jupiter-managed-integration-sdk";
+import { IntegrationInvocationConfig } from '@jupiterone/integration-sdk-core';
 
-import executionHandler from "./executionHandler";
-import invocationValidator from "./invocationValidator";
+import invocationValidator from './invocationValidator';
+import { synchronizeStep } from './steps/synchronize';
+import { CarbonBlackIntegrationConfig } from './types';
 
-const invocationConfig: IntegrationInvocationConfig = {
-  instanceConfigFields: {
-    site: {
-      type: "string",
-      mask: false,
+export const invocationConfig: IntegrationInvocationConfig<CarbonBlackIntegrationConfig> =
+  {
+    instanceConfigFields: {
+      site: {
+        type: 'string',
+        mask: false,
+      },
+      orgKey: {
+        type: 'string',
+        mask: false,
+      },
+      connectorId: {
+        type: 'string',
+        mask: false,
+      },
+      apiKey: {
+        type: 'string',
+        mask: true,
+      },
     },
-    orgKey: {
-      type: "string",
-      mask: false,
-    },
-    connectorId: {
-      type: "string",
-      mask: false,
-    },
-    apiKey: {
-      type: "string",
-      mask: true,
-    },
-  },
-
-  executionHandler,
-  invocationValidator,
-};
-
-export default invocationConfig;
+    validateInvocation: invocationValidator,
+    integrationSteps: [synchronizeStep],
+  };

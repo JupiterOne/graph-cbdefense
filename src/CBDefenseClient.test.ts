@@ -1,5 +1,5 @@
 import { Recording, setupRecording } from "@jupiterone/integration-sdk-testing";
-import { createTestLogger } from "@jupiterone/jupiter-managed-integration-sdk";
+import { createMockIntegrationLogger } from "@jupiterone/integration-sdk-testing";
 
 import CbDefenseClient from "./CbDefenseClient";
 
@@ -9,7 +9,7 @@ const config = {
   orgKey: process.env.ORG_KEY || "test",
   apiKey: process.env.API_KEY || "test",
 };
-const client = new CbDefenseClient(config, createTestLogger());
+const client = new CbDefenseClient(config, createMockIntegrationLogger());
 const cbUrl = `https://defense-${
   config.site
 }.conferdeploy.net/appservices/v6/orgs/${config.orgKey}`;
