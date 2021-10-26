@@ -8,6 +8,16 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 2.0.1 - 2021-10-13
+
+### Changed
+
+- Updated integration to latest `@jupiterone/integration-sdk-*` packages
+
+### Fixed
+
+- Prevent duplicate `cbdefense_sensor` entity keys from being produced
+
 ## 2.0.0 - 2021-10-13
 
 ### Changed

@@ -1,15 +1,15 @@
 import {
   IntegrationError,
   IntegrationProviderAuthenticationError,
-} from "@jupiterone/integration-sdk-core";
-import Axios, * as axios from "axios";
-import { Opaque } from "type-fest";
+} from '@jupiterone/integration-sdk-core';
+import Axios, * as axios from 'axios';
+import { Opaque } from 'type-fest';
 
-import { CarbonBlackIntegrationConfig } from "./types";
+import { CarbonBlackIntegrationConfig } from './types';
 
-export type CarbonBlackAccount = Opaque<any, "CarbonBlackAccount">;
-export type CarbonBlackDeviceSensor = Opaque<any, "CarbonBlackDeviceSensor">;
-export type CarbonBlackAlert = Opaque<any, "CarbonBlackAlert">;
+export type CarbonBlackAccount = Opaque<any, 'CarbonBlackAccount'>;
+export type CarbonBlackDeviceSensor = Opaque<any, 'CarbonBlackDeviceSensor'>;
+export type CarbonBlackAlert = Opaque<any, 'CarbonBlackAlert'>;
 
 export default class CbDefenseClient {
   /**
@@ -32,14 +32,12 @@ export default class CbDefenseClient {
   ) {
     this.site = config.site;
 
-    this.platformBaseUrl = `https://defense-${
-      this.site
-    }.conferdeploy.net/appservices/v6/orgs/${config.orgKey}`;
+    this.platformBaseUrl = `https://defense-${this.site}.conferdeploy.net/appservices/v6/orgs/${config.orgKey}`;
 
     this.logger = logger;
     this.axiosInstance = Axios.create({
       headers: {
-        "X-Auth-Token": `${config.apiKey}/${config.connectorId}`,
+        'X-Auth-Token': `${config.apiKey}/${config.connectorId}`,
       },
     });
   }
@@ -61,8 +59,8 @@ export default class CbDefenseClient {
         };
       } else {
         throw new IntegrationError({
-          code: "NO_DEVICE_SENSORS_FOUND",
-          message: "Unable to retrieve account details, no device sensor found",
+          code: 'NO_DEVICE_SENSORS_FOUND',
+          message: 'Unable to retrieve account details, no device sensor found',
         });
       }
     } catch (err) {
@@ -76,17 +74,20 @@ export default class CbDefenseClient {
       } else {
         throw new IntegrationError({
           cause: err,
-          code: "ACCOUNT_DETAILS_ERROR",
-          message: "Unable to retrieve account details",
+          code: 'ACCOUNT_DETAILS_ERROR',
+          message: 'Unable to retrieve account details',
         });
       }
     }
   }
 
+  /**
+   * API Documentation: https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/devices-api/#search-devices
+   */
   public async iterateDevices(
     callback: (agent: CarbonBlackDeviceSensor) => void,
   ): Promise<void> {
-    const url = "/devices/_search";
+    const url = '/devices/_search';
 
     try {
       await this.iterateResults({
@@ -98,7 +99,7 @@ export default class CbDefenseClient {
         {
           err,
         },
-        "Encounted error retrieving devices",
+        'Encounted error retrieving devices',
       );
       const response = err.response || {};
 
@@ -117,7 +118,7 @@ export default class CbDefenseClient {
     callback: (alert: CarbonBlackAlert) => void,
     alertsSince: Date,
   ): Promise<void> {
-    const url = "/alerts/_search";
+    const url = '/alerts/_search';
 
     try {
       await this.iterateResults({
@@ -135,7 +136,7 @@ export default class CbDefenseClient {
         {
           err,
         },
-        "Encounted error retrieving alerts",
+        'Encounted error retrieving alerts',
       );
       const response = err.response || {};
       // CB API seems returns 500 errors for empty results
