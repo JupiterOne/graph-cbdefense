@@ -21,7 +21,6 @@ import {
   createDeviceSensorAlertFindingRelationship,
   createDeviceSensorEntity,
   createServiceEntity,
-  DeviceSensorEntity,
   mapSensorToDeviceRelationship,
 } from '../converters';
 import { CarbonBlackIntegrationConfig } from '../types';
@@ -48,7 +47,7 @@ async function getAccount(
 async function syncDeviceSensors(
   context: IntegrationStepExecutionContext<CarbonBlackIntegrationConfig>,
 ) {
-  const { jobState } = context;
+  const { jobState, logger } = context;
   const accountEntity = await jobState.getData<Entity>(SetDataKeys.ACCOUNT);
   if (!accountEntity) {
     throw new IntegrationError({
@@ -57,12 +56,28 @@ async function syncDeviceSensors(
         'Could not synchronize device sensors - account entity not found.',
     });
   }
+
   const provider = new CbDefenseClient(context.instance.config, context.logger);
 
   await provider.iterateDevices(async (device) => {
-    const deviceEntity = (await jobState.addEntity(
-      createDeviceSensorEntity(device),
-    )) as DeviceSensorEntity;
+    const deviceEntity = createDeviceSensorEntity(device);
+
+    // NOTE: It seems that it's possible for the same CB device to be returned
+    // from the API multiple times. It's not immediately clear why that is.
+    // Perhaps CB keeps records of every deregistered device and keeps separate
+    // records of when the device is registered later.
+    if (await jobState.hasKey(deviceEntity._key)) {
+      logger.info(
+        {
+          _key: deviceEntity._key,
+          status: device.status,
+        },
+        'Duplicate device key found',
+      );
+      return;
+    }
+
+    await jobState.addEntity(deviceEntity);
     await jobState.addRelationship(
       createAccountDeviceSensorRelationship(accountEntity, deviceEntity),
     );
