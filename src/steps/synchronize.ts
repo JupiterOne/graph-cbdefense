@@ -13,7 +13,6 @@ import {
   StepIds,
 } from '../constants';
 import {
-  AlertFindingEntity,
   createAccountDeviceSensorRelationship,
   createAccountEntity,
   createAccountServiceRelationship,
@@ -88,18 +87,30 @@ async function syncDeviceSensors(
 async function syncAlertFindings(
   context: IntegrationStepExecutionContext<CarbonBlackIntegrationConfig>,
 ) {
-  const { jobState, executionHistory } = context;
+  const { logger, jobState, executionHistory } = context;
   const provider = new CbDefenseClient(context.instance.config, context.logger);
 
   const alertsSinceDate = determineAlertsSinceDate(
     executionHistory.lastSuccessful?.startedOn,
   );
   await provider.iterateAlerts(async (alert) => {
-    const findingEntity = (await jobState.addEntity(
-      createAlertFindingEntity(alert),
-    )) as AlertFindingEntity;
+    const alertFindingEntity = createAlertFindingEntity(alert);
+
+    // NOTE: It seems that it's possible for the same CB device to be returned
+    // from the API multiple times. It's not immediately clear why that is.
+    if (await jobState.hasKey(alertFindingEntity._key)) {
+      logger.info(
+        {
+          _key: alertFindingEntity._key,
+        },
+        'Duplicate alert key found',
+      );
+      return;
+    }
+
+    await jobState.addEntity(alertFindingEntity);
     await jobState.addRelationship(
-      createDeviceSensorAlertFindingRelationship(findingEntity),
+      createDeviceSensorAlertFindingRelationship(alertFindingEntity),
     );
   }, alertsSinceDate);
 }
