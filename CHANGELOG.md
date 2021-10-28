@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 2.0.2 - 2021-10-28
+
+### Fixed
+
+- Prevent duplicate `cbdefense_alert` entity keys from being produced
+
 ## 2.0.1 - 2021-10-26
 
 ### Changed

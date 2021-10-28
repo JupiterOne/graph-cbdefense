@@ -107,7 +107,7 @@ export default class CbDefenseClient {
       if (response.status !== 500) {
         throw new IntegrationError({
           cause: err,
-          code: `TENABLE_CLIENT_API_${response.status}_ERROR`,
+          code: `CB_DEFENSE_CLIENT_API_${response.status}_ERROR`,
           message: `${response.statusText}: ${response.status} post ${url}`,
         });
       }
@@ -143,7 +143,7 @@ export default class CbDefenseClient {
       if (response.status !== 500) {
         throw new IntegrationError({
           cause: err,
-          code: `TENABLE_CLIENT_API_${response.status}_ERROR`,
+          code: `CB_DEFENSE_CLIENT_API_${response.status}_ERROR`,
           message: `${response.statusText}: ${response.status} post ${url}`,
         });
       }
