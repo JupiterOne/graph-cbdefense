@@ -46,7 +46,7 @@ async function getAccount(
 async function syncDeviceSensors(
   context: IntegrationStepExecutionContext<CarbonBlackIntegrationConfig>,
 ) {
-  const { jobState, logger } = context;
+  const { jobState, logger, instance } = context;
   const accountEntity = await jobState.getData<Entity>(SetDataKeys.ACCOUNT);
   if (!accountEntity) {
     throw new IntegrationError({
@@ -56,10 +56,10 @@ async function syncDeviceSensors(
     });
   }
 
-  const provider = new CbDefenseClient(context.instance.config, context.logger);
+  const provider = new CbDefenseClient(instance.config, context.logger);
 
   await provider.iterateDevices(async (device) => {
-    const deviceEntity = createDeviceSensorEntity(device);
+    const deviceEntity = createDeviceSensorEntity(instance.config.site, device);
 
     // NOTE: It seems that it's possible for the same CB device to be returned
     // from the API multiple times. It's not immediately clear why that is.
@@ -87,14 +87,17 @@ async function syncDeviceSensors(
 async function syncAlertFindings(
   context: IntegrationStepExecutionContext<CarbonBlackIntegrationConfig>,
 ) {
-  const { logger, jobState, executionHistory } = context;
-  const provider = new CbDefenseClient(context.instance.config, context.logger);
+  const { logger, jobState, executionHistory, instance } = context;
+  const provider = new CbDefenseClient(instance.config, context.logger);
 
   const alertsSinceDate = determineAlertsSinceDate(
     executionHistory.lastSuccessful?.startedOn,
   );
   await provider.iterateAlerts(async (alert) => {
-    const alertFindingEntity = createAlertFindingEntity(alert);
+    const alertFindingEntity = createAlertFindingEntity(
+      instance.config.site,
+      alert,
+    );
 
     // NOTE: It seems that it's possible for the same CB device to be returned
     // from the API multiple times. It's not immediately clear why that is.

@@ -1,4 +1,4 @@
-import camelCase from "lodash/camelCase";
+import camelCase from 'lodash/camelCase';
 
 import {
   convertProperties,
@@ -9,25 +9,26 @@ import {
   getTime,
   RelationshipDirection,
   RelationshipMapping,
-} from "@jupiterone/integration-sdk-core";
+} from '@jupiterone/integration-sdk-core';
 
 import {
   CarbonBlackAccount,
   CarbonBlackAlert,
   CarbonBlackDeviceSensor,
-} from "./CbDefenseClient";
+} from './CbDefenseClient';
 import {
   Entities,
   MappedRelationships,
   Relationships,
   TargetEntities,
-} from "./constants";
+} from './constants';
 import {
   FindingSeverityNormal,
   FindingSeverityNormalName,
   FindingSeverityNormalNames,
-} from "./types";
-import { normalizeHostname } from "./util/normalizeHostname";
+} from './types';
+import { normalizeHostname } from './util/normalizeHostname';
+import { URL } from 'url';
 
 /**
  * An extension of `Entity` used to build mapped relationships to
@@ -65,7 +66,7 @@ export function createAccountEntity(data: CarbonBlackAccount): Entity {
         _type: Entities.ACCOUNT._type,
         accountId: data.organization_id,
         name: data.organization_name,
-        organization: data.organization_name.replace(/\.[a-z]{2,3}$/, ""),
+        organization: data.organization_name.replace(/\.[a-z]{2,3}$/, ''),
         webLink: siteWeblink(data.site),
       },
     },
@@ -83,9 +84,9 @@ export function createServiceEntity(
         _key: `${Entities.SERVICE._type}-${organizationId}`,
         _class: Entities.SERVICE._class,
         _type: Entities.SERVICE._type,
-        name: "CB Endpoint Protection Service",
-        category: ["software", "other"],
-        function: ["monitoring"],
+        name: 'CB Endpoint Protection Service',
+        category: ['software', 'other'],
+        function: ['monitoring'],
         endpoints: [siteWeblink(site)],
       },
     },
@@ -103,9 +104,10 @@ function convertTimeProperties(data: any): object {
   return timeProperties;
 }
 
-const REDACTED = "REDACTED";
+const REDACTED = 'REDACTED';
 
 export function createDeviceSensorEntity(
+  site: string,
   data: CarbonBlackDeviceSensor,
 ): DeviceSensorEntity {
   const source = {
@@ -125,16 +127,16 @@ export function createDeviceSensorEntity(
         _class: Entities.DEVICE_SENSOR._class,
         _type: Entities.DEVICE_SENSOR._type,
         id: String(source.id),
-        name: source.name || "cbdefense-sensor",
+        name: source.name || 'cbdefense-sensor',
         hostname: normalizeHostname(source.name),
         active:
-          source.status !== "INACTIVE" &&
+          source.status !== 'INACTIVE' &&
           source.sensor_states != null &&
-          source.sensor_states.indexOf("ACTIVE") >= 0,
-        function: ["anti-malware", "activity-monitor"],
+          source.sensor_states.indexOf('ACTIVE') >= 0,
+        function: ['anti-malware', 'activity-monitor'],
         macAddress: formatMacAddress(source.mac_address),
         lastSeenOn: getTime(source.last_contact_time),
-
+        webLink: deviceSensorWebLink(site, source.id),
         // Remove codes
         activationCode: null,
         encodedActivationCode: null,
@@ -148,7 +150,22 @@ function deviceSensorKey(deviceId: number): string {
   return `cbdefense-sensor-${deviceId}`;
 }
 
+/**
+ * Constructs a device sensor web link.
+ * Ex. https://defense-prod05.conferdeploy.net/cb/investigate/events/events?searchWindow=ONE_MONTH&query=device_id%3A6923993
+ * @param site
+ * @param deviceId
+ */
+function deviceSensorWebLink(site: string, deviceId: number): string {
+  const url = new URL(`${siteWeblink(site)}/cb/investigate/events`);
+  // searchWindow could be a different value. Consider changing once appropriate values are known
+  url.searchParams.append('searchWindow', 'ONE_MONTH');
+  url.searchParams.append('query', `device_id:${deviceId}`);
+  return url.toString();
+}
+
 export function createAlertFindingEntity(
+  site: string,
   data: CarbonBlackAlert,
 ): AlertFindingEntity {
   return createIntegrationEntity({
@@ -168,7 +185,11 @@ export function createAlertFindingEntity(
         numericSeverity: data.severity,
         alertSeverity: severityString(data.severity),
         description: data.reason,
-
+        webLink: alertFindingWebLink(site, {
+          alertId: data.id,
+          deviceId: data.Device_id,
+          orgId: data.org_key,
+        }),
         // When the alert exists, it is considered open
         open: true,
       },
@@ -181,11 +202,35 @@ function alertFindingDisplayName(data: CarbonBlackAlert): string {
     data.process_name,
     data.reason_code,
     data.threat_cause_vector,
-  ].filter(e => !!e);
+  ].filter((e) => !!e);
   if (components.length !== 3) {
     return data.id;
   }
-  return components.join(" : ");
+  return components.join(' : ');
+}
+
+/**
+ * Constructs a web link to an alert finding.
+ * Ex: https://defense-prod05.conferdeploy.net/cb/investigate/events?query=alert_id:ddddddd-ssss-rrrrr-3333-00000000ec0 AND device_id:0000000&searchWindow=ALL&orgId=00000
+ * @param site
+ * @param data
+ */
+function alertFindingWebLink(
+  site: string,
+  data: {
+    alertId: string;
+    deviceId: number;
+    orgId: string;
+  },
+): string {
+  const url = new URL(`${siteWeblink(site)}/cb/investigate/events`);
+  url.searchParams.append(
+    'query',
+    `alert_id:${data.alertId} AND device_id:${data.deviceId}`,
+  );
+  url.searchParams.append('searchWindow', 'ALL');
+  url.searchParams.append('orgId', data.orgId);
+  return url.toString();
 }
 
 /**
@@ -193,19 +238,18 @@ function alertFindingDisplayName(data: CarbonBlackAlert): string {
  * not a normalized value, but one described in their product guide. Providing
  * this value allows users to search for terms documented by Carbon Black.
  *
- * @see
- * https://www.vmware.com/content/dam/digitalmarketing/vmware/en/pdf/products/vmware-cb-defense-integration-confgiurtion-guide-v2.pdf
+ * @see https://www.vmware.com/content/dam/digitalmarketing/vmware/en/pdf/products/vmware-cb-defense-integration-confgiurtion-guide-v2.pdf
  * @param numericSeverity the alert severity numeric value
  */
 function severityString(numericSeverity: number): string {
   if (numericSeverity < 4) {
-    return "Minor";
+    return 'Minor';
   } else if (numericSeverity < 8) {
-    return "Severe";
+    return 'Severe';
   } else if (numericSeverity < 11) {
-    return "Critical";
+    return 'Critical';
   } else {
-    return "Unknown";
+    return 'Unknown';
   }
 }
 
@@ -213,8 +257,7 @@ function severityString(numericSeverity: number): string {
  * Converts a Carbon Black alert numeric severity to J1 normalized
  * numeric values.
  *
- * @see
- * https://www.vmware.com/content/dam/digitalmarketing/vmware/en/pdf/products/vmware-cb-defense-integration-confgiurtion-guide-v2.pdf
+ * @see https://www.vmware.com/content/dam/digitalmarketing/vmware/en/pdf/products/vmware-cb-defense-integration-confgiurtion-guide-v2.pdf
  * @param numericSeverity the alert severity numeric value
  */
 export function normalizeSeverity(
@@ -274,11 +317,11 @@ export function createAccountDeviceSensorRelationship(
 export function mapSensorToDeviceRelationship(sensor: DeviceSensorEntity) {
   const hostname = sensor.hostname;
   const targetFilterKeys = sensor.macAddress
-    ? [["_type", "macAddress"]]
-    : [["_type", "hostname", "owner"]];
+    ? [['_type', 'macAddress']]
+    : [['_type', 'hostname', 'owner']];
 
   const platform =
-    sensor.os && sensor.os.match(/mac/i) ? "darwin" : sensor.os.toLowerCase();
+    sensor.os && sensor.os.match(/mac/i) ? 'darwin' : sensor.os.toLowerCase();
   const osDetails = sensor.osVersion;
 
   const osPatternRegex = /^(mac os x|\w+)\s([0-9.]+)\s?(\w+)?$/i;
@@ -286,7 +329,7 @@ export function mapSensorToDeviceRelationship(sensor: DeviceSensorEntity) {
 
   const osName =
     osPatternMatch &&
-    (osPatternMatch[1].match(/mac/i) ? "macOS" : osPatternMatch[1]);
+    (osPatternMatch[1].match(/mac/i) ? 'macOS' : osPatternMatch[1]);
   const osVersion = osPatternMatch && osPatternMatch[2];
 
   // define target device properties via relationship mapping
@@ -334,8 +377,8 @@ export function createDeviceSensorAlertFindingRelationship(
 
 function formatMacAddress(macAddress: string): string | undefined {
   if (macAddress) {
-    return macAddress.includes(":")
+    return macAddress.includes(':')
       ? macAddress.toLowerCase()
-      : macAddress.toLowerCase().replace(/(.{2})(?!$)/g, "$1:");
+      : macAddress.toLowerCase().replace(/(.{2})(?!$)/g, '$1:');
   }
 }
