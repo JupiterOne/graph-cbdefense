@@ -32,7 +32,7 @@ export default async function invocationValidator({
 
   const { site, orgKey, connectorId, apiKey } = instanceConfig;
 
-  if (!(site && orgKey && connectorId && apiKey)) {
+  if (!(orgKey && connectorId && apiKey)) {
     throw new IntegrationValidationError(
       'Configuration requires site, orgKey, connectorId, and apiKey',
     );

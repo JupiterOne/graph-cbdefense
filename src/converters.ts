@@ -53,7 +53,9 @@ export type AlertFindingEntity = Entity & {
 };
 
 function siteWeblink(site: string): string {
-  return `https://defense-${site}.conferdeploy.net`;
+  const sitePath = site && site.trim() ? `-${site}` : '';
+
+  return `https://defense${sitePath}.conferdeploy.net`;
 }
 
 export function createAccountEntity(data: CarbonBlackAccount): Entity {
@@ -157,10 +159,8 @@ function deviceSensorKey(deviceId: number): string {
  * @param deviceId
  */
 function deviceSensorWebLink(site: string, deviceId: number): string {
-  const url = new URL(`${siteWeblink(site)}/cb/investigate/events`);
-  // searchWindow could be a different value. Consider changing once appropriate values are known
-  url.searchParams.append('searchWindow', 'ONE_MONTH');
-  url.searchParams.append('query', `device_id:${deviceId}`);
+  const url = new URL(`${siteWeblink(site)}/inventory/endpoints`);
+  url.searchParams.append('s[query]', `${deviceId}`);
   return url.toString();
 }
 
@@ -187,8 +187,7 @@ export function createAlertFindingEntity(
         description: data.reason,
         webLink: alertFindingWebLink(site, {
           alertId: data.id,
-          deviceId: data.Device_id,
-          orgId: data.org_key,
+          deviceId: data.device_id,
         }),
         // When the alert exists, it is considered open
         open: true,
@@ -211,7 +210,7 @@ function alertFindingDisplayName(data: CarbonBlackAlert): string {
 
 /**
  * Constructs a web link to an alert finding.
- * Ex: https://defense-prod05.conferdeploy.net/cb/investigate/events?query=alert_id:ddddddd-ssss-rrrrr-3333-00000000ec0 AND device_id:0000000&searchWindow=ALL&orgId=00000
+ * ex: https://defense.conferdeploy.net/alerts?s[searchWindow]=ALL&s[c][query_string]=alert_id:234 AND device_id:432
  * @param site
  * @param data
  */
@@ -220,16 +219,14 @@ function alertFindingWebLink(
   data: {
     alertId: string;
     deviceId: number;
-    orgId: string;
   },
 ): string {
-  const url = new URL(`${siteWeblink(site)}/cb/investigate/events`);
+  const url = new URL(`${siteWeblink(site)}/alerts`);
   url.searchParams.append(
-    'query',
+    's[c][query_string]',
     `alert_id:${data.alertId} AND device_id:${data.deviceId}`,
   );
-  url.searchParams.append('searchWindow', 'ALL');
-  url.searchParams.append('orgId', data.orgId);
+  url.searchParams.append('s[searchWindow]', 'ALL');
   return url.toString();
 }
 

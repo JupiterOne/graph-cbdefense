@@ -205,7 +205,7 @@ describe('createDeviceEntity', () => {
 
       lastSeenOn: 1592085700367,
       webLink:
-        'https://defense-prod8.conferdeploy.net/cb/investigate/events?searchWindow=ONE_MONTH&query=device_id%3A7891906',
+        'https://defense-prod8.conferdeploy.net/inventory/endpoints?s%5Bquery%5D=7891906',
       activationCode: null,
       encodedActivationCode: null,
       uninstallCode: null,
@@ -343,7 +343,7 @@ describe('createAlertFindingEntity', () => {
   };
 
   test('properties transferred', () => {
-    expect(createAlertFindingEntity('prod5', data)).toEqual({
+    expect(createAlertFindingEntity('  ', data)).toEqual({
       _rawData: [
         {
           name: 'default',
@@ -389,7 +389,7 @@ describe('createAlertFindingEntity', () => {
       numericSeverity: 3,
       alertSeverity: 'Minor',
       webLink:
-        'https://defense-prod5.conferdeploy.net/cb/investigate/events?query=alert_id%3A038894832709076d63111e99466f73575fcf3ca+AND+device_id%3A123&searchWindow=ALL&orgId=ASDF1234',
+        'https://defense.conferdeploy.net/alerts?s%5Bc%5D%5Bquery_string%5D=alert_id%3A038894832709076d63111e99466f73575fcf3ca+AND+device_id%3Aundefined&s%5BsearchWindow%5D=ALL',
       open: true,
     });
   });

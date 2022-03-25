@@ -49,10 +49,11 @@ Console to allow access to the Devices and Alerts APIs.
 With the Access Level and API Key now configured, you'll need to provide these
 parameters to the integration instance configuration:
 
-- **Deployment Site/Environment** (`site`): The part immediately following
-  `defense-` in your Carbon Black Cloud account URL. For example, if you access
-  your account at `https://defense-prod05.conferdeploy.net/`, the `site` is
-  `prod05`.
+- **Deployment Site/Environment** (`site`): (Optional) The part immediately
+  following `defense-` in your Carbon Black Cloud account URL. For example, if
+  you access your account at `https://defense-prod05.conferdeploy.net/`, the
+  `site` is `prod05`. See more details
+  [here](https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#building-your-base-urls)
 - **Org Key** (`orgKey`): From **Settings > API Access**, capture the _Org Key_.
 - **API ID** (`connectorId`): Captured during API Key creation.
 - **API Key** (`apiKey`): Captured during API Key creation.
