@@ -30,9 +30,10 @@ export default class CbDefenseClient {
     config: CarbonBlackIntegrationConfig,
     logger: { info: (...args: any[]) => boolean | void },
   ) {
-    this.site = config.site;
+    // See details here: https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#building-your-base-urls
+    this.site = config.site && config.site.trim() ? `-${config.site}` : '';
 
-    this.platformBaseUrl = `https://defense-${this.site}.conferdeploy.net/appservices/v6/orgs/${config.orgKey}`;
+    this.platformBaseUrl = `https://defense${this.site}.conferdeploy.net/appservices/v6/orgs/${config.orgKey}`;
 
     this.logger = logger;
     this.axiosInstance = Axios.create({
@@ -99,7 +100,7 @@ export default class CbDefenseClient {
         {
           err,
         },
-        'Encounted error retrieving devices',
+        'Encountered error retrieving devices',
       );
       const response = err.response || {};
 
@@ -136,7 +137,7 @@ export default class CbDefenseClient {
         {
           err,
         },
-        'Encounted error retrieving alerts',
+        'Encountered error retrieving alerts',
       );
       const response = err.response || {};
       // CB API seems returns 500 errors for empty results

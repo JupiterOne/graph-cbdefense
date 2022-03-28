@@ -1,6 +1,6 @@
-import { IntegrationValidationError } from "@jupiterone/integration-sdk-core";
-import CbDefenseClient from "./CbDefenseClient";
-import { CarbonBlackIntegrationConfig } from "./types";
+import { IntegrationValidationError } from '@jupiterone/integration-sdk-core';
+import CbDefenseClient from './CbDefenseClient';
+import { CarbonBlackIntegrationConfig } from './types';
 
 /**
  * Performs validation of the execution before the execution handler function is
@@ -27,20 +27,20 @@ export default async function invocationValidator({
   const instanceConfig = instance.config;
 
   if (!instanceConfig) {
-    throw new IntegrationValidationError("Configuration missing");
+    throw new IntegrationValidationError('Configuration missing');
   }
 
   const { site, orgKey, connectorId, apiKey } = instanceConfig;
 
-  if (!(site && orgKey && connectorId && apiKey)) {
+  if (!(orgKey && connectorId && apiKey)) {
     throw new IntegrationValidationError(
-      "Configuration requires site, orgKey, connectorId, and apiKey",
+      'Configuration requires orgKey, connectorId, and apiKey',
     );
   }
 
-  if (site.match("conferdeploy")) {
+  if (site?.match('conferdeploy')) {
     throw new IntegrationValidationError(
-      "Site is invalid; should be the environment only, not the full dashboard URL. For example, `prod05` in `https://defense-prod05.conferdeploy.net/`",
+      'Site is invalid; should be the environment only, not the full dashboard URL. For example, `prod05` in `https://defense-prod05.conferdeploy.net/`',
     );
   }
 

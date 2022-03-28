@@ -1,5 +1,5 @@
 export interface CarbonBlackIntegrationConfig {
-  site: string;
+  site?: string;
   orgKey: string;
   connectorId: string;
   apiKey: string;
@@ -15,12 +15,12 @@ export enum FindingSeverityNormal {
 }
 
 export enum FindingSeverityNormalName {
-  Unknown = "Unknown",
-  Informational = "Informational",
-  Low = "Low",
-  Medium = "Medium",
-  High = "High",
-  Critical = "Critical",
+  Unknown = 'Unknown',
+  Informational = 'Informational',
+  Low = 'Low',
+  Medium = 'Medium',
+  High = 'High',
+  Critical = 'Critical',
 }
 
 export const FindingSeverityNormalNames = {
