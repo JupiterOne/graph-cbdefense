@@ -8,6 +8,15 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 2.1.0 - 2022-03-28
+
+### Changed
+
+- Added weblinks to Device Sensors and Alert Findings entities.
+- Added support for instances that don't require a site value in the URL. See
+  more details
+  [here](https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#building-your-base-urls)
+
 ## 2.0.2 - 2021-10-28
 
 ### Fixed
