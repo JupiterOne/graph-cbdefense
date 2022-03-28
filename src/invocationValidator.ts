@@ -34,11 +34,11 @@ export default async function invocationValidator({
 
   if (!(orgKey && connectorId && apiKey)) {
     throw new IntegrationValidationError(
-      'Configuration requires site, orgKey, connectorId, and apiKey',
+      'Configuration requires orgKey, connectorId, and apiKey',
     );
   }
 
-  if (site.match('conferdeploy')) {
+  if (site?.match('conferdeploy')) {
     throw new IntegrationValidationError(
       'Site is invalid; should be the environment only, not the full dashboard URL. For example, `prod05` in `https://defense-prod05.conferdeploy.net/`',
     );

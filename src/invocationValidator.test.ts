@@ -23,11 +23,11 @@ test('should throw error if configuration is not found', async () => {
   );
 });
 
-test('should throw error if site is missing', async () => {
+test('should throw error if orgKey is missing', async () => {
   const config: CarbonBlackIntegrationConfig = {
     connectorId: uuid(),
     apiKey: uuid(),
-    site: '',
+    site: 'prod',
     orgKey: '',
   };
 
@@ -97,7 +97,6 @@ test('should throw if site include domain', async () => {
 
 test.skip('authentication failure', async () => {
   const config: CarbonBlackIntegrationConfig = {
-    site: 'prod01',
     orgKey: uuid(),
     connectorId: uuid(),
     apiKey: uuid(),

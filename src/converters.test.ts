@@ -16,7 +16,7 @@ test('createAccountDeviceSensorRelationship', () => {
     organization_id: 123,
     organization_name: 'lifeomic.com',
   });
-  const deviceEntity = createDeviceSensorEntity('dev1', { id: 891 });
+  const deviceEntity = createDeviceSensorEntity({ id: 891 }, 'dev1');
 
   expect(
     createAccountDeviceSensorRelationship(accountEntity, deviceEntity),
@@ -167,7 +167,7 @@ describe('createDeviceEntity', () => {
   };
 
   test('properties transferred', () => {
-    const entity = createDeviceSensorEntity('prod8', data);
+    const entity = createDeviceSensorEntity(data, 'prod8');
     expect(entity).toMatchObject({
       _rawData: [
         {
@@ -214,22 +214,25 @@ describe('createDeviceEntity', () => {
 
   test('no time value', () => {
     expect(
-      createDeviceSensorEntity('prod2', {
-        ...data,
-        activation_code_expiry_time: null,
-        av_last_scan_time: null,
-        deregistered_time: null,
-        last_contact_time: null,
-        last_device_policy_changed_time: null,
-        last_device_policy_requested_time: null,
-        last_policy_updated_time: null,
-        last_reported_time: null,
-        last_reset_time: null,
-        last_shutdown_time: null,
-        registered_time: null,
-        scan_last_action_time: null,
-        scan_last_complete_time: null,
-      }),
+      createDeviceSensorEntity(
+        {
+          ...data,
+          activation_code_expiry_time: null,
+          av_last_scan_time: null,
+          deregistered_time: null,
+          last_contact_time: null,
+          last_device_policy_changed_time: null,
+          last_device_policy_requested_time: null,
+          last_policy_updated_time: null,
+          last_reported_time: null,
+          last_reset_time: null,
+          last_shutdown_time: null,
+          registered_time: null,
+          scan_last_action_time: null,
+          scan_last_complete_time: null,
+        },
+        'prod2',
+      ),
     ).toMatchObject({
       activationCodeExpiryTime: undefined,
       avLastScanTime: undefined,
@@ -250,10 +253,13 @@ describe('createDeviceEntity', () => {
 
   test('no device name', () => {
     expect(
-      createDeviceSensorEntity('prod2', {
-        ...data,
-        name: null,
-      }),
+      createDeviceSensorEntity(
+        {
+          ...data,
+          name: null,
+        },
+        'prod2',
+      ),
     ).toMatchObject({
       displayName: 'cbdefense-sensor',
     });
@@ -261,16 +267,19 @@ describe('createDeviceEntity', () => {
 });
 
 test('mapSensorToDeviceRelationship', () => {
-  const sensor = createDeviceSensorEntity('prod1', {
-    id: 123,
-    email: 'test@example.com',
-    name: 'Davids-MacBook-Pro.local',
-    mac_address: '88e9fe4c693b',
-    last_external_ip_address: '172.73.179.50',
-    last_internal_ip_address: '192.168.0.131',
-    os: 'MAC',
-    os_version: 'MAC OS X 10.15.5',
-  });
+  const sensor = createDeviceSensorEntity(
+    {
+      id: 123,
+      email: 'test@example.com',
+      name: 'Davids-MacBook-Pro.local',
+      mac_address: '88e9fe4c693b',
+      last_external_ip_address: '172.73.179.50',
+      last_internal_ip_address: '192.168.0.131',
+      os: 'MAC',
+      os_version: 'MAC OS X 10.15.5',
+    },
+    'prod1',
+  );
 
   const mapping = {
     relationshipDirection: 'FORWARD',
@@ -343,7 +352,7 @@ describe('createAlertFindingEntity', () => {
   };
 
   test('properties transferred', () => {
-    expect(createAlertFindingEntity('  ', data)).toEqual({
+    expect(createAlertFindingEntity(data, '  ')).toEqual({
       _rawData: [
         {
           name: 'default',
@@ -396,7 +405,7 @@ describe('createAlertFindingEntity', () => {
 
   test('displayName when missing any component property', () => {
     expect(
-      createAlertFindingEntity('prod5', { ...data, process_name: undefined }),
+      createAlertFindingEntity({ ...data, process_name: undefined }, 'prod5'),
     ).toMatchObject({
       displayName: '038894832709076d63111e99466f73575fcf3ca',
     });

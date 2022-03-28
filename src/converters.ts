@@ -52,7 +52,7 @@ export type AlertFindingEntity = Entity & {
   deviceId: number;
 };
 
-function siteWeblink(site: string): string {
+function siteWeblink(site?: string): string {
   const sitePath = site && site.trim() ? `-${site}` : '';
 
   return `https://defense${sitePath}.conferdeploy.net`;
@@ -109,8 +109,8 @@ function convertTimeProperties(data: any): object {
 const REDACTED = 'REDACTED';
 
 export function createDeviceSensorEntity(
-  site: string,
   data: CarbonBlackDeviceSensor,
+  site?: string,
 ): DeviceSensorEntity {
   const source = {
     ...data,
@@ -138,7 +138,7 @@ export function createDeviceSensorEntity(
         function: ['anti-malware', 'activity-monitor'],
         macAddress: formatMacAddress(source.mac_address),
         lastSeenOn: getTime(source.last_contact_time),
-        webLink: deviceSensorWebLink(site, source.id),
+        webLink: deviceSensorWebLink(source.id, site),
         // Remove codes
         activationCode: null,
         encodedActivationCode: null,
@@ -158,15 +158,15 @@ function deviceSensorKey(deviceId: number): string {
  * @param site
  * @param deviceId
  */
-function deviceSensorWebLink(site: string, deviceId: number): string {
+function deviceSensorWebLink(deviceId: number, site?: string): string {
   const url = new URL(`${siteWeblink(site)}/inventory/endpoints`);
   url.searchParams.append('s[query]', `${deviceId}`);
   return url.toString();
 }
 
 export function createAlertFindingEntity(
-  site: string,
   data: CarbonBlackAlert,
+  site?: string,
 ): AlertFindingEntity {
   return createIntegrationEntity({
     entityData: {
@@ -185,10 +185,13 @@ export function createAlertFindingEntity(
         numericSeverity: data.severity,
         alertSeverity: severityString(data.severity),
         description: data.reason,
-        webLink: alertFindingWebLink(site, {
-          alertId: data.id,
-          deviceId: data.device_id,
-        }),
+        webLink: alertFindingWebLink(
+          {
+            alertId: data.id,
+            deviceId: data.device_id,
+          },
+          site,
+        ),
         // When the alert exists, it is considered open
         open: true,
       },
@@ -215,11 +218,11 @@ function alertFindingDisplayName(data: CarbonBlackAlert): string {
  * @param data
  */
 function alertFindingWebLink(
-  site: string,
   data: {
     alertId: string;
     deviceId: number;
   },
+  site?: string,
 ): string {
   const url = new URL(`${siteWeblink(site)}/alerts`);
   url.searchParams.append(

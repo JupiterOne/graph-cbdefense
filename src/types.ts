@@ -1,5 +1,5 @@
 export interface CarbonBlackIntegrationConfig {
-  site: string;
+  site?: string;
   orgKey: string;
   connectorId: string;
   apiKey: string;

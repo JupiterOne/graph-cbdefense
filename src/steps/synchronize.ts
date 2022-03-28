@@ -59,7 +59,7 @@ async function syncDeviceSensors(
   const provider = new CbDefenseClient(instance.config, context.logger);
 
   await provider.iterateDevices(async (device) => {
-    const deviceEntity = createDeviceSensorEntity(instance.config.site, device);
+    const deviceEntity = createDeviceSensorEntity(device, instance.config.site);
 
     // NOTE: It seems that it's possible for the same CB device to be returned
     // from the API multiple times. It's not immediately clear why that is.
@@ -95,8 +95,8 @@ async function syncAlertFindings(
   );
   await provider.iterateAlerts(async (alert) => {
     const alertFindingEntity = createAlertFindingEntity(
-      instance.config.site,
       alert,
+      instance.config.site,
     );
 
     // NOTE: It seems that it's possible for the same CB device to be returned
