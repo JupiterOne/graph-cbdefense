@@ -6,7 +6,7 @@ import {
   createIntegrationEntity,
   Entity,
   ExplicitRelationship,
-  getTime,
+  parseTimePropertyValue,
   RelationshipDirection,
   RelationshipMapping,
 } from '@jupiterone/integration-sdk-core';
@@ -100,7 +100,7 @@ function convertTimeProperties(data: any): object {
   const timeProperties: any = {};
   for (const key in data) {
     if (TIME_PROPERTY_NAME_REGEX.test(key)) {
-      timeProperties[camelCase(key)] = getTime(data[key]);
+      timeProperties[camelCase(key)] = parseTimePropertyValue(data[key]);
     }
   }
   return timeProperties;
@@ -137,7 +137,7 @@ export function createDeviceSensorEntity(
           source.sensor_states.indexOf('ACTIVE') >= 0,
         function: ['anti-malware', 'activity-monitor'],
         macAddress: formatMacAddress(source.mac_address),
-        lastSeenOn: getTime(source.last_contact_time),
+        lastSeenOn: parseTimePropertyValue(source.last_contact_time),
         webLink: deviceSensorWebLink(source.id, site),
         // Remove codes
         activationCode: null,
@@ -179,8 +179,8 @@ export function createAlertFindingEntity(
         _class: Entities.ALERT._class,
         name: data.id,
         displayName: alertFindingDisplayName(data),
-        createdOn: getTime(data.create_time),
-        updatedOn: getTime(data.last_update_time),
+        createdOn: parseTimePropertyValue(data.create_time),
+        updatedOn: parseTimePropertyValue(data.last_update_time),
         severity: normalizeSeverity(data.severity)[1],
         numericSeverity: data.severity,
         alertSeverity: severityString(data.severity),

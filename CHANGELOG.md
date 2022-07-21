@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 3.0.0 - 2022-07-21
+
+### Changed
+
+- Upgrade `@jupiterone/integration-sdk` packages to v8
+
 ## 2.1.0 - 2022-03-28
 
 ### Changed
