@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 4.0.1 - 2023-09-28
+
+- fix build workflow and republish
+
+## 4.0.0 - 2023-09-28
+
+- Dockerize integration
+
 ## 3.0.0 - 2022-07-21
 
 ### Changed
