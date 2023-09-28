@@ -65,7 +65,7 @@ async function syncDeviceSensors(
     // from the API multiple times. It's not immediately clear why that is.
     // Perhaps CB keeps records of every deregistered device and keeps separate
     // records of when the device is registered later.
-    if (await jobState.hasKey(deviceEntity._key)) {
+    if (jobState.hasKey(deviceEntity._key)) {
       logger.info(
         {
           _key: deviceEntity._key,
@@ -101,7 +101,7 @@ async function syncAlertFindings(
 
     // NOTE: It seems that it's possible for the same CB device to be returned
     // from the API multiple times. It's not immediately clear why that is.
-    if (await jobState.hasKey(alertFindingEntity._key)) {
+    if (jobState.hasKey(alertFindingEntity._key)) {
       logger.info(
         {
           _key: alertFindingEntity._key,
