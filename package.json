@@ -38,6 +38,7 @@
     "@jupiterone/integration-sdk-dev-tools": "^10.7.0",
     "@jupiterone/integration-sdk-testing": "^10.7.0",
     "@types/uuid": "^8.3.1",
+    "@types/node": "^18.0.0",
     "uuid": "^8.3.2"
   }
 }

@@ -36,7 +36,10 @@ describe('CbDefenseClient', () => {
         res.sendStatus(500);
       });
     try {
-      await client.iterateAlerts(() => undefined, new Date('2021-05-01'));
+      await client.iterateAlerts(
+        () => Promise.resolve(),
+        new Date('2021-05-01'),
+      );
     } catch (e) {
       fail(e);
     }
@@ -59,7 +62,10 @@ describe('CbDefenseClient', () => {
         res.sendStatus(404);
       });
     try {
-      await client.iterateAlerts(() => undefined, new Date('2021-05-01'));
+      await client.iterateAlerts(
+        () => Promise.resolve(),
+        new Date('2021-05-01'),
+      );
     } catch (e) {
       expect(e.code).toBe('CB_DEFENSE_CLIENT_API_404_ERROR');
     }
@@ -82,7 +88,7 @@ describe('CbDefenseClient', () => {
         res.sendStatus(500);
       });
     try {
-      await client.iterateDevices(() => undefined);
+      await client.iterateDevices(() => Promise.resolve());
     } catch (e) {
       fail(e);
     }
@@ -105,7 +111,7 @@ describe('CbDefenseClient', () => {
         res.sendStatus(404);
       });
     try {
-      await client.iterateDevices(() => undefined);
+      await client.iterateDevices(() => Promise.resolve());
     } catch (e) {
       expect(e.code).toBe('CB_DEFENSE_CLIENT_API_404_ERROR');
     }
