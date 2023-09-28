@@ -6,6 +6,10 @@ on:
 
 jobs:
   publish-image:
+    runs-on: ubuntu-latest
+    if:
+      github.event.base_ref == 'refs/heads/main' || github.event.ref ==
+      'refs/heads/main'
     permissions:
       contents: read
       packages: write
