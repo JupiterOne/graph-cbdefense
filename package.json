@@ -26,7 +26,7 @@
     "prepush": "yarn format:check && yarn lint && yarn type-check && jest --changedSince main"
   },
   "peerDependencies": {
-    "@jupiterone/integration-sdk-core": "^8.22.0"
+    "@jupiterone/integration-sdk-core": "^10.7.0"
   },
   "dependencies": {
     "axios": "^0.21.1",
@@ -34,9 +34,9 @@
     "type-fest": "^0.15.1"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-core": "^8.22.0",
-    "@jupiterone/integration-sdk-dev-tools": "^8.22.0",
-    "@jupiterone/integration-sdk-testing": "^8.22.0",
+    "@jupiterone/integration-sdk-core": "^10.7.0",
+    "@jupiterone/integration-sdk-dev-tools": "^10.7.0",
+    "@jupiterone/integration-sdk-testing": "^10.7.0",
     "@types/uuid": "^8.3.1",
     "uuid": "^8.3.2"
   }
