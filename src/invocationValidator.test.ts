@@ -3,7 +3,7 @@ import {
   IntegrationValidationError,
 } from '@jupiterone/integration-sdk-core';
 import { createMockExecutionContext } from '@jupiterone/integration-sdk-testing';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import invocationValidator from './invocationValidator';
 import { CarbonBlackIntegrationConfig } from './types';
 
