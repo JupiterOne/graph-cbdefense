@@ -86,7 +86,7 @@ export default class CbDefenseClient {
    * API Documentation: https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/devices-api/#search-devices
    */
   public async iterateDevices(
-    callback: (agent: CarbonBlackDeviceSensor) => void,
+    callback: (agent: CarbonBlackDeviceSensor) => Promise<void>,
   ): Promise<void> {
     const url = '/devices/_search';
 
@@ -116,7 +116,7 @@ export default class CbDefenseClient {
   }
 
   public async iterateAlerts(
-    callback: (alert: CarbonBlackAlert) => void,
+    callback: (alert: CarbonBlackAlert) => Promise<void>,
     alertsSince: Date,
   ): Promise<void> {
     const url = '/alerts/_search';
@@ -163,7 +163,7 @@ export default class CbDefenseClient {
         end: string;
       };
     };
-    callback: (agent: T) => void;
+    callback: (agent: T) => Promise<void>;
   }): Promise<void> {
     const platformUrl = `${this.platformBaseUrl}${platformPath}`;
     const rows = 200;
@@ -197,7 +197,9 @@ export default class CbDefenseClient {
         `Fetched page for ${platformUrl}`,
       );
 
-      results.forEach(callback);
+      for (const result of results) {
+        await callback(result);
+      }
     }
   }
 }
