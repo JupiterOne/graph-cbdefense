@@ -11,12 +11,12 @@ jobs:
     steps:
       - id: setup-node
         name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 18.x
 
       - name: Check out code repository source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: yarn
@@ -35,12 +35,12 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 18.x
 
       - name: Check out repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 2
 
@@ -67,27 +67,3 @@ jobs:
           yarn
           yarn build
           npm publish ./dist
-
-      - name: Get Version Changelog Entry
-        if: env.publish == 'true'
-        id: changelog_reader
-        uses: mindsers/changelog-reader-action@v2
-        with:
-          version: ${{ env.VERSION_NUM }}
-          path: ./CHANGELOG.md
-        continue-on-error: true
-
-      - name: Create Release
-        if: env.publish == 'true'
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.changelog_reader.outputs.version }}
-          release_name: Release ${{ steps.changelog_reader.outputs.version }}
-          body: ${{ steps.changelog_reader.outputs.changes }}
-          prerelease:
-            ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
-          draft: ${{ steps.changelog_reader.outputs.status == 'unreleased' }}
-        continue-on-error: true
