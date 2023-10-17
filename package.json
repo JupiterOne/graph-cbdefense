@@ -2,6 +2,10 @@
   "name": "@jupiterone/graph-cbdefense",
   "version": "4.0.1",
   "description": "JupiterOne managed integration for Carbon Black Defense.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JupiterOne/graph-cbdefense"
+  },
   "license": "MPL-2.0",
   "main": "src/index.js",
   "types": "src/index.d.ts",
